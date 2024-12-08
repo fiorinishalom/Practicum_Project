@@ -27,14 +27,14 @@ const sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 async function processEmail(email) {
     try {
         const parsed = await simpleParser(email);
-        const sender = parsed.from.text;
-        const body = parsed.text;
-        const aside_ID = parsed.subject;
-
-        const message = new GenericMessageObject(sender, body, aside_ID);
+        const emailJson = {
+            sender: parsed.from.text,
+            body: parsed.text,
+            subject: parsed.subject
+        };
 
         const params = {
-            MessageBody: JSON.stringify(message),
+            MessageBody: JSON.stringify(emailJson),
             QueueUrl: queueUrl
         };
 
