@@ -15,11 +15,39 @@ const imap = new Imap({
     tls: true, // Use TLS
 });
 
-// Function to process the email
-function processEmail(email) {
-    // This is where you trigger your process
-    console.log('Processing email:', email);
-    // For example, log the email or call other functions here
+const { simpleParser } = require('mailparser');
+const AWS = require('aws-sdk');
+const GenericMessageObject = require('../Components/GenericMessageObject');
+const queueUrl = process.env.SQS_QUEUE_URL;
+
+// Configure AWS SQS
+AWS.config.update({ region: 'us-east-1' });
+const sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
+
+async function processEmail(email) {
+    try {
+        const parsed = await simpleParser(email);
+        const sender = parsed.from.text;
+        const body = parsed.text;
+        const aside_ID = parsed.subject;
+
+        const message = new GenericMessageObject(sender, body, aside_ID);
+
+        const params = {
+            MessageBody: JSON.stringify(message),
+            QueueUrl: queueUrl
+        };
+
+        sqs.sendMessage(params, (err, data) => {
+            if (err) {
+                console.error("Error sending message to SQS:", err);
+            } else {
+                console.log("Message sent to SQS:", data.MessageId);
+            }
+        });
+    } catch (error) {
+        console.error("Error processing email:", error);
+    }
 }
 
 // Function to check emails and delete them after processing
