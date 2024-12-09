@@ -1,27 +1,11 @@
-// Import required modules
-const { SQSClient, SendMessageCommand } = require("@aws-sdk/client-sqs");
+const { SendMessageCommand } = require("@aws-sdk/client-sqs");
+const sqsClient = require("../Components/SQSClient.js");
 require("dotenv").config({ path: './secrets.env' });
-console.log("Environment variables loaded:", process.env.SQS_ACCESS_KEY_ID);
 
-// Load environment variables from the .env file
-const {
-    SQS_ACCESS_KEY_ID,
-    SQS_SECRET_ACCESS_KEY,
-    SQS_REGION,
-    SQS_QUEUE_URL,
-} = process.env;
+const { SQS_QUEUE_URL } = process.env;
 
-// Create an SQS client with credentials and region
-const sqsClient = new SQSClient({
-    region: SQS_REGION,
-    credentials: {
-        accessKeyId: SQS_ACCESS_KEY_ID,
-        secretAccessKey: SQS_SECRET_ACCESS_KEY,
-    },
-});
-
-// Function to send message to SQS
-const sendToSQS = async (message) => {
+// Function to send a message to the SQS queue
+const sendToQueue = async (message) => {
     try {
         const command = new SendMessageCommand({
             QueueUrl: SQS_QUEUE_URL,
@@ -35,6 +19,6 @@ const sendToSQS = async (message) => {
     }
 };
 
-// Send a test message
-const message = "This is a test message to SQS";
-sendToSQS(message);
+// Example usage
+const message = "Hello from AWS SDK v3 using custom client!";
+sendToQueue(message);

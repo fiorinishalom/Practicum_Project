@@ -1,55 +1,48 @@
-// Import required modules
-const { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } = require("@aws-sdk/client-sqs");
+const { ReceiveMessageCommand, DeleteMessageCommand } = require("@aws-sdk/client-sqs");
+const sqsClient = require("../Components/SQSClient.js");
 require("dotenv").config({ path: './secrets.env' });
 
-// Load environment variables from the .env file
-const {
-    SQS_ACCESS_KEY_ID,
-    SQS_SECRET_ACCESS_KEY,
-    SQS_REGION,
-    SQS_QUEUE_URL,
-} = process.env;
+const { SQS_QUEUE_URL } = process.env;
 
-// Create an SQS client with credentials and region
-const sqsClient = new SQSClient({
-    region: SQS_REGION,  // Ensure this variable is set correctly in .env
-    credentials: {
-        accessKeyId: SQS_ACCESS_KEY_ID,
-        secretAccessKey: SQS_SECRET_ACCESS_KEY,
-    },
-});
-
-// Function to receive a message from SQS
-const receiveFromSQS = async () => {
+// Function to query messages from the SQS queue
+const queryQueue = async () => {
     try {
-        // Receive a message from the queue
         const receiveCommand = new ReceiveMessageCommand({
             QueueUrl: SQS_QUEUE_URL,
-            MaxNumberOfMessages: 1,  // Fetch a maximum of 1 message (change as needed)
-            WaitTimeSeconds: 0,      // Short polling, set to > 0 for long polling
+            MaxNumberOfMessages: 1, // Retrieve one message at a time
+            WaitTimeSeconds: 10,    // Long polling (adjust as needed)
         });
 
         const response = await sqsClient.send(receiveCommand);
 
         if (response.Messages && response.Messages.length > 0) {
             const message = response.Messages[0];
-            console.log("Received message:", message.Body);
+            console.log("Message received:", message.Body);
 
-            // Delete the message from the queue (pop it off the queue)
-            const deleteCommand = new DeleteMessageCommand({
-                QueueUrl: SQS_QUEUE_URL,
-                ReceiptHandle: message.ReceiptHandle,
-            });
-
-            await sqsClient.send(deleteCommand);
-            console.log("Message deleted from queue");
+            // Delete the message after processing
+            await deleteMessage(message.ReceiptHandle);
         } else {
-            console.log("No messages to receive");
+            console.log("No messages available in the queue.");
         }
     } catch (error) {
-        console.error("Error receiving message:", error);
+        console.error("Error querying the queue:", error);
     }
 };
 
-// Call the function to receive and delete a message
-receiveFromSQS();
+// Function to delete a processed message from the queue
+const deleteMessage = async (receiptHandle) => {
+    try {
+        const deleteCommand = new DeleteMessageCommand({
+            QueueUrl: SQS_QUEUE_URL,
+            ReceiptHandle: receiptHandle,
+        });
+
+        await sqsClient.send(deleteCommand);
+        console.log("Message deleted successfully.");
+    } catch (error) {
+        console.error("Error deleting message:", error);
+    }
+};
+
+// Query the queue
+queryQueue();
