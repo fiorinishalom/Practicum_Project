@@ -3,13 +3,13 @@ const sqsClient = require("../Components/SQSClient.js");
 require("dotenv").config({ path: './secrets.env' });
 
 
-const { SQS_QUEUE_URL } = process.env;
+const { SQS_INBOUND_QUEUE_URL } = process.env;
 
 // Function to send a message to the SQS queue
-const sendToQueue = async (message) => {
+const sendToInbound = async (message) => {
     try {
         const command = new SendMessageCommand({
-            QueueUrl: SQS_QUEUE_URL,
+            QueueUrl: SQS_INBOUND_QUEUE_URL,
             MessageBody: message,
         });
 
@@ -22,5 +22,5 @@ const sendToQueue = async (message) => {
 
 // Example usage
 const message = "Hello from AWS SDK v3 using custom client!";
-sendToQueue(message);
+sendToInbound(message);
 
