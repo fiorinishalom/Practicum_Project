@@ -2,6 +2,7 @@ const { ReceiveMessageCommand, DeleteMessageCommand } = require("@aws-sdk/client
 const sqsClient = require("../Components/SQSClient.js");
 require("dotenv").config({ path: './secrets.env' });
 
+
 const { SQS_QUEUE_URL } = process.env;
 
 // Function to query messages from the SQS queue
