@@ -1,8 +1,19 @@
-const base64url = require('base64url'); // npm install base64url
-require('dotenv').config({ path: '../secrets.env' });
+const base64url = require('base64url');
+const path = require('path');
+const fs = require('fs');
 const { google } = require('googleapis');
 const { simpleParser } = require('mailparser');
 const { sendMessage } = require('../Components/SQSClient');
+
+// Resolve the absolute path to the secrets.env file
+const Secrets_path = path.resolve(__dirname, '../Secrets/secrets.env');
+
+// Validate the path to the secrets.env file
+if (!fs.existsSync(Secrets_path)) {
+    throw new Error(`Secrets file not found at path: ${Secrets_path}`);
+}
+
+require('dotenv').config({ path: Secrets_path });
 
 // Load environment variables from the .env file
 const {
