@@ -9,7 +9,7 @@ const REDIRECT_URI = 'http://localhost:3000/oauth2callback';
 
 const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 
-const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/gmail.modify'];
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -33,8 +33,17 @@ function getAccessToken(code) {
         oauth2Client.setCredentials(tokens);
         console.log('Tokens acquired:', tokens);
 
-        // Save the refresh token to the secrets.env file
-        fs.appendFileSync('../secrets.env', `\nOAUTH_REFRESH_TOKEN=${tokens.refresh_token}`);
+        // Read the secrets.env file
+        let envFileContent = fs.readFileSync('../secrets.env', 'utf8');
+
+        // Remove the existing OAUTH_REFRESH_TOKEN line
+        envFileContent = envFileContent.split('\n').filter(line => !line.startsWith('OAUTH_REFRESH_TOKEN')).join('\n');
+
+        // Append the new refresh token
+        envFileContent += `\nOAUTH_REFRESH_TOKEN=${tokens.refresh_token}`;
+
+        // Write the updated content back to the secrets.env file
+        fs.writeFileSync('../secrets.env', envFileContent);
         console.log('Refresh token saved to secrets.env');
     });
 }
