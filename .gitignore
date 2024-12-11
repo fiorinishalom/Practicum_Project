@@ -73,6 +73,9 @@ web_modules/
 .yarn-integrity
 
 # dotenv environment variable files
+*.env
+EmailSecrets.env
+SlackSecrets.env
 secrets.env
 .env.development.local
 .env.test.local
@@ -132,3 +135,7 @@ secrets.env
 
 #ignore shelfs
 /shelf/
+Secrets/EmailSecrets.env
+Secrets/SlackSecrets.env
+Secrets/secrets.env
+Secrets/
