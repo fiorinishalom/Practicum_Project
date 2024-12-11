@@ -1,118 +1,77 @@
+const base64url = require('base64url'); // npm install base64url
 require('dotenv').config({ path: '../secrets.env' });
-const express = require('express');
-const Imap = require('imap');
+const { google } = require('googleapis');
 const { simpleParser } = require('mailparser');
-const SQSClient = require('../Components/SQSClient');
-const { email_port } = require('../Components/PortNumbers');
-const app = express();
-const port = email_port;
+const { sendMessage } = require('../Components/SQSClient');
 
 // Load environment variables from the .env file
 const {
-    SQS_QUEUE_URL,
-    EMAIL_USER,
-    EMAIL_PASSWORD,
-    IMAP_HOST
+    SQS_INBOUND_QUEUE_URL,
+    OAUTH_CLIENT_ID,
+    OAUTH_CLIENT_SECRET,
+    OAUTH_REFRESH_TOKEN
 } = process.env;
 
 // Ensure all required environment variables are loaded
-if (!SQS_QUEUE_URL || !EMAIL_USER || !EMAIL_PASSWORD || !IMAP_HOST) {
+if (!SQS_INBOUND_QUEUE_URL || !OAUTH_CLIENT_ID || !OAUTH_CLIENT_SECRET || !OAUTH_REFRESH_TOKEN) {
     throw new Error('Missing required environment variables');
 }
 
-// Configure IMAP connection details
-const imap = new Imap({
-    user: EMAIL_USER,
-    password: EMAIL_PASSWORD,
-    host: IMAP_HOST,
-    port: 993,
-    tls: true,
-});
-
-// Create an SQS client instance
-const sqsClient = new SQSClient(SQS_QUEUE_URL);
+// Configure OAuth2 client
+const oauth2Client = new google.auth.OAuth2(OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, 'http://localhost:3000/oauth2callback');
+oauth2Client.setCredentials({ refresh_token: OAUTH_REFRESH_TOKEN });
 
 async function processEmail(email) {
     try {
-        const parsed = await simpleParser(email);
+        const decodedRaw = base64url.decode(email);
+        const parsed = await simpleParser(decodedRaw);
         const emailJson = {
             sender: parsed.from.text,
             body: parsed.text,
             subject: parsed.subject
         };
 
-        const response = await sqsClient.send(emailJson);
+        console.log("Email received:", emailJson);
+
+        const response = await sendMessage(SQS_INBOUND_QUEUE_URL, JSON.stringify(emailJson));
         console.log("Message sent to SQS:", response.MessageId);
     } catch (error) {
         console.error("Error processing email:", error);
     }
 }
 
-function checkEmails() {
-    imap.once('ready', () => {
-        imap.openBox('INBOX', false, (err) => {
-            if (err) throw err;
+async function checkEmails() {
+    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-            imap.on('mail', () => {
-                imap.search(['UNSEEN'],  (err, results)=> {
-                    if (err || results.length === 0) {
-                        console.log('No new emails');
-                        return;
-                    }
+    try {
+        const res = await gmail.users.messages.list({ userId: 'me', q: 'is:unread' });
+        const messages = res.data.messages || [];
 
-                    const fetch = imap.fetch(results, { bodies: '' });
+        if (messages.length === 0) {
+            console.log('No new emails');
+            return;
+        }
 
-                    fetch.on('message', (msg, seqno) => {
-                        msg.on('body', (stream) => {
-                            let body = '';
-                            stream.on('data', function (chunk) {
-                                body += chunk.toString();
-                            });
-                            stream.on('end', function () {
-                                processEmail(body);
-                            });
-                        });
+        for (const message of messages) {
+            const msg = await gmail.users.messages.get({ userId: 'me', id: message.id, format: 'raw' });
+            const email = msg.data.raw;
+            if (email) {
+                await processEmail(email);
+            } else {
+                console.error('Email content is null or undefined');
+            }
 
-                        msg.once('end', () => {
-                            imap.addFlags(seqno, '\\Deleted', function () {
-                                if (err) {
-                                    console.error('Error marking email for deletion:', err);
-                                } else {
-                                    console.log('Email marked for deletion');
-                                }
-                            });
-                        });
-                    });
-
-                    fetch.once('end', function () {
-                        imap.expunge(function (err) {
-                            if (err) console.log('Error expunging:', err);
-                            else console.log('Emails deleted');
-                        });
-                    });
-                });
+            // Mark the email as read
+            await gmail.users.messages.modify({
+                userId: 'me',
+                id: message.id,
+                resource: { removeLabelIds: ['UNREAD'] }
             });
-
-            imap.idle();
-        });
-    });
-
-    imap.once('error', function (err) {
-        console.log(err);
-    });
-
-    imap.once('end', function () {
-        console.log('Connection ended');
-    });
-
-    imap.connect();
+        }
+    } catch (error) {
+        console.error('Error checking emails:', error);
+    }
 }
 
-app.get('/check-emails', (req, res) => {
-    checkEmails();
-    res.send('Checking emails...');
-});
-
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
-});
+// Call the checkEmails function directly
+checkEmails();

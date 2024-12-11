@@ -1,8 +1,10 @@
 {
   "dependencies": {
     "@aws-sdk/client-sqs": "^3.699.0",
+    "base64url": "^3.0.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.1",
+    "googleapis": "^144.0.0",
     "imap": "^0.8.19",
     "mailparser": "^3.7.2",
     "mysql2": "^3.11.4"
