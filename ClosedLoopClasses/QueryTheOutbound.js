@@ -1,25 +1,28 @@
-const { ReceiveMessageCommand, DeleteMessageCommand } = require("@aws-sdk/client-sqs");
+// QueryTheOutbound.js
+const { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } = require("@aws-sdk/client-sqs");
 const sqsClient = require("../Components/SQSClient.js");
+const { sendEmail } = require("../Components/emailService"); // Import the sendEmail function
 require("dotenv").config({ path: './secrets.env' });
 
-const { SQS_OUTBOUND_QUEUE_URL } = process.env; // Ensure this variable is defined in your secrets.env
+const { SQS_OUTBOUND_QUEUE_URL } = process.env;
 
-// Function to query messages from the outbound SQS queue
+// Function to query messages from the SQS outbound queue
 const queryOutboundQueue = async () => {
     try {
         const receiveCommand = new ReceiveMessageCommand({
-            QueueUrl: SQS_OUTBOUND_QUEUE_URL, // URL for the outbound SQS queue
-            MaxNumberOfMessages: 1, // Retrieve one message at a time
-            WaitTimeSeconds: 10,    // Long polling (adjust as needed)
+            QueueUrl: SQS_OUTBOUND_QUEUE_URL,
+            MaxNumberOfMessages: 1,
+            WaitTimeSeconds: 10,
         });
 
         const response = await sqsClient.send(receiveCommand);
 
         if (response.Messages && response.Messages.length > 0) {
             const message = response.Messages[0];
-            console.log("Outbound message received:", message.Body);
+            console.log("Message received:", message.Body);
 
-            // Process the message as needed here
+            // Here, you can send the email with the message body
+            await sendEmail('recipient@example.com', 'Subject Here', message.Body); // Change recipient@example.com to the actual recipient's email
 
             // Delete the message after processing
             await deleteMessage(message.ReceiptHandle);
@@ -31,18 +34,18 @@ const queryOutboundQueue = async () => {
     }
 };
 
-// Function to delete a processed message from the outbound queue
+// Function to delete a processed message from the queue
 const deleteMessage = async (receiptHandle) => {
     try {
         const deleteCommand = new DeleteMessageCommand({
-            QueueUrl: SQS_OUTBOUND_QUEUE_URL, // URL for the outbound SQS queue
+            QueueUrl: SQS_OUTBOUND_QUEUE_URL,
             ReceiptHandle: receiptHandle,
         });
 
         await sqsClient.send(deleteCommand);
-        console.log("Outbound message deleted successfully.");
+        console.log("Message deleted successfully.");
     } catch (error) {
-        console.error("Error deleting outbound message:", error);
+        console.error("Error deleting message:", error);
     }
 };
 
