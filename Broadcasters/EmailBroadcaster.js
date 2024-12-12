@@ -1,35 +1,44 @@
 const nodemailer = require('nodemailer');
 const { google } = require('googleapis');
+const path = require('path');
+const fs = require('fs');
 
-const OAUTH_CLIENT_ID = 'your-client-id';
-const OAUTH_CLIENT_SECRET = 'your-client-secret';
-const REDIRECT_URI = 'https://developers.google.com/oauthplayground';
-const OAUTH_REFRESH_TOKEN = 'your-refresh-token';
+// Resolve the absolute path to the secrets.env file
+const Secrets_path = path.resolve(__dirname, '../Secrets/secrets.env');
 
-const oAuth2Client = new google.auth.OAuth2(
-    OAUTH_CLIENT_ID,
-    OAUTH_CLIENT_SECRET,
-    REDIRECT_URI
-);
+// Validate the path to the secrets.env file
+if (!fs.existsSync(Secrets_path)) {
+    throw new Error(`Secrets file not found at path: ${Secrets_path}`);
+}
 
-oAuth2Client.setCredentials({ refresh_token: OAUTH_REFRESH_TOKEN });
+require('dotenv').config({ path: Secrets_path });
+
+const { OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, OAUTH_REFRESH_TOKEN, EMAIL_USER } = process.env;
+
+const REDIRECT_URI = 'http://localhost:3000/oauth2callback';
+
+// Configure OAuth2 client
+const oauth2Client = new google.auth.OAuth2(OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, REDIRECT_URI);
+oauth2Client.setCredentials({ refresh_token: OAUTH_REFRESH_TOKEN });
 
 async function sendEmail() {
     try {
-        const accessToken = await oAuth2Client.getAccessToken();
+        const accessToken = await oauth2Client.getAccessToken();
+        console.log('Access Token:', accessToken.token);
 
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
                 type: 'OAuth2',
-                user: 'ChorusAside@gmail.com', // Your Gmail address
+                user: EMAIL_USER, // Your Gmail address
                 clientId: OAUTH_CLIENT_ID,
-
-
                 clientSecret: OAUTH_CLIENT_SECRET,
                 refreshToken: OAUTH_REFRESH_TOKEN,
                 accessToken: accessToken.token,
             },
+            tls: {
+                rejectUnauthorized: false
+            }
         });
 
         const mailOptions = {

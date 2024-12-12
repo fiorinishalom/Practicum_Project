@@ -28,8 +28,9 @@ if (!SQS_INBOUND_QUEUE_URL || !OAUTH_CLIENT_ID || !OAUTH_CLIENT_SECRET || !OAUTH
     throw new Error('Missing required environment variables');
 }
 
+const REDIRECT_URI = 'http://localhost:3000/oauth2callback';
 // Configure OAuth2 client
-const oauth2Client = new google.auth.OAuth2(OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, 'http://localhost:3000/oauth2callback');
+const oauth2Client = new google.auth.OAuth2(OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, REDIRECT_URI);
 oauth2Client.setCredentials({ refresh_token: OAUTH_REFRESH_TOKEN });
 
 async function processEmail(email) {

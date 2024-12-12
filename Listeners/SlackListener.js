@@ -1,11 +1,12 @@
+const fs = require('fs');
 require('dotenv').config();
 const { WebClient } = require('@slack/web-api');
 const AWS = require('aws-sdk');
 const https = require('https');
-const uriredirect = 'https://localhost:3000/oauth2callback'
+const uriredirect = 'https://localhost:3000/oauth2callback';
 
 // Load SSL certificates
-const privateKey = fs.readFileSync('path/to/server.key', 'utf8');
+const privateKey = process.env.SSL_PRIVATE_KEY;
 const certificate = fs.readFileSync('path/to/server.cert', 'utf8');
 const credentials = { key: privateKey, cert: certificate };
 
