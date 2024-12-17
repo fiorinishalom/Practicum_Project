@@ -1,5 +1,7 @@
 const SQSClient = require('../Components/SQSClient.js');
-require("dotenv").config({ path: "../secrets.env" });
+const path = require("path");
+const Secrets_path = path.resolve(__dirname, '../Secrets/secrets.env');
+require("dotenv").config({ path: Secrets_path });
 
 const { SQS_QUEUE_URL } = process.env;
 const sqsClient = new SQSClient(SQS_QUEUE_URL);

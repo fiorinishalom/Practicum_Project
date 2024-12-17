@@ -139,3 +139,5 @@ Secrets/EmailSecrets.env
 Secrets/SlackSecrets.env
 Secrets/secrets.env
 Secrets/
+Components/server.key
+Components/server.crt
