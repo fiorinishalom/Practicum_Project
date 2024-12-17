@@ -8,6 +8,7 @@
     "googleapis": "^144.0.0",
     "imap": "^0.8.19",
     "mailparser": "^3.7.2",
+    "mysql": "^2.18.1",
     "mysql2": "^3.11.4",
     "nodemailer": "^6.9.16"
   },
