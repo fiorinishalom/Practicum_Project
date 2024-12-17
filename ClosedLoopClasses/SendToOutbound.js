@@ -1,6 +1,6 @@
 const { SendMessageCommand } = require("@aws-sdk/client-sqs");
 const sqsClient = require("../Components/SQSClient.js"); // Reuse the client from Components
-require("dotenv").config({ path: './secrets.env' });
+require("dotenv").config({ path: '../Secrets/secrets.env' });
 
 const { SQS_OUTBOUND_QUEUE_URL } = process.env;
 

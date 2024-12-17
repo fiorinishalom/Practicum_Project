@@ -1,6 +1,6 @@
 const { google } = require('googleapis');
 const readline = require('readline');
-require('dotenv').config({ path: '../secrets.env' });
+require('dotenv').config({ path: '../Secrets/secrets.env' });
 
 // Load your client ID and client secret from the credentials file
 const CLIENT_ID = process.env.OAUTH_CLIENT_ID;

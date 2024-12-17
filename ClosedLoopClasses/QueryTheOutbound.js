@@ -2,7 +2,7 @@
 const { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } = require("@aws-sdk/client-sqs");
 const sqsClient = require("../Components/SQSClient.js");
 const { sendEmail } = require("../Components/emailService"); // Import the sendEmail function
-require("dotenv").config({ path: './secrets.env' });
+require("dotenv").config({ path: '../Secrets/secrets.env' });
 
 const { SQS_OUTBOUND_QUEUE_URL } = process.env;
 
