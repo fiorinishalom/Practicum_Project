@@ -3,10 +3,13 @@ const path = require('path');
 const fs = require('fs');
 const { google } = require('googleapis');
 const { simpleParser } = require('mailparser');
-const { sendMessage } = require('../Components/SQSClient');
+const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
+const { fromIni } = require('@aws-sdk/credential-provider-ini');
+const { fromEnv } = require('@aws-sdk/credential-provider-env');
 
 // Resolve the absolute path to the secrets.env file
 const Secrets_path = path.resolve(__dirname, '../Secrets/secrets.env');
+
 
 // Validate the path to the secrets.env file
 if (!fs.existsSync(Secrets_path)) {
@@ -18,6 +21,7 @@ require('dotenv').config({ path: Secrets_path });
 // Load environment variables from the .env file
 const {
     SQS_INBOUND_QUEUE_URL,
+    AWS_REGION,
     OAUTH_CLIENT_ID,
     OAUTH_CLIENT_SECRET,
     OAUTH_REFRESH_TOKEN
@@ -29,9 +33,31 @@ if (!SQS_INBOUND_QUEUE_URL || !OAUTH_CLIENT_ID || !OAUTH_CLIENT_SECRET || !OAUTH
 }
 
 const REDIRECT_URI = 'http://localhost:3000/oauth2callback';
+
 // Configure OAuth2 client
 const oauth2Client = new google.auth.OAuth2(OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, REDIRECT_URI);
 oauth2Client.setCredentials({ refresh_token: OAUTH_REFRESH_TOKEN });
+
+// Create an SQS client with environment credentials
+const sqsClient = new SQSClient({
+    region: AWS_REGION,
+    credentials: fromEnv()
+});
+
+async function sendMessage(queueUrl, messageBody) {
+    const params = {
+        QueueUrl: queueUrl,
+        MessageBody: messageBody
+    };
+
+    try {
+        const command = new SendMessageCommand(params);
+        return await sqsClient.send(command);
+    } catch (error) {
+        console.error('Error sending message to SQS:', error);
+        throw error;
+    }
+}
 
 async function processEmail(email) {
     try {
