@@ -1,9 +1,10 @@
 const { ReceiveMessageCommand, DeleteMessageCommand } = require("@aws-sdk/client-sqs");
 const sqsClient = require("../Components/SQSClient.js");
 const { sendMessageToQueue } = require("./SendToOutbound.js"); // Adjusted the path
-require("dotenv").config({ path: './secrets.env' });
-
-
+const mysql =  require('mysql2/promise');
+require("dotenv").config({ path: '../Secrets/secrets.env' });
+//----------------------------------------------------------------------------------------------------------------------------
+//get Message from Inbound Q
 const { SQS_INBOUND_QUEUE_URL } = process.env; // Changed to SQS_INBOUND_QUEUE_URL
 
 // Function to query messages from the SQS queue
@@ -33,6 +34,23 @@ const queryQueue = async () => {
         console.error("Error querying the queue:", error);
     }
 };
+
+
+//Retrieve AsideId from MSG and retrieve all user Platform Specific Address
+// const getPSAOfAsideMembers = async (asideID) => {
+//     try {
+//         const query =
+//             `
+//             SELECT Accounts.PSA
+//             FROM Accounts
+//             INNER JOIN asideUsers ON Accounts.userID = asideUsers.userId
+//             INNER JOIN Asides ON asideUsers.asideId = Asides.asideId
+//             WHERE Asides.asideId = ?;
+//         `;
+//     }
+// }
+
+
 
 // Function to delete a processed message from the queue
 const deleteMessage = async (receiptHandle) => {
