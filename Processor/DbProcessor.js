@@ -1,11 +1,38 @@
+// Import necessary libraries
+const { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } = require("@aws-sdk/client-sqs");
 const dbConnection = require("../Components/DB_Conn");
 const getMessageSender = require("../SendingToOutboundQueue/getMessageSender");
-const sqsClient = require("../Components/SQSClient");
-const {ReceiveMessageCommand} = require("@aws-sdk/client-sqs");
-
-
 require("dotenv").config({ path: "../Secrets/secrets.env" });
-const { SQS_INBOUND_QUEUE_URL } = process.env;
+
+// Load environment variables
+const { AWS_REGION, SQS_INBOUND_QUEUE_URL } = process.env;
+
+// Create SQS client
+const client = new SQSClient({ region: AWS_REGION });
+
+
+
+// Function to receive messages
+const receiveMessages = async (queueUrl, maxNumberOfMessages = 1, waitTimeSeconds = 10) => {
+    const command = new ReceiveMessageCommand({
+        QueueUrl: queueUrl,
+        MaxNumberOfMessages: maxNumberOfMessages,
+        WaitTimeSeconds: waitTimeSeconds,
+    });
+
+    const response = await client.send(command);
+    return response.Messages || [];
+};
+
+// Function to delete a message
+const deleteMessage = async (queueUrl, receiptHandle) => {
+    const command = new DeleteMessageCommand({
+        QueueUrl: queueUrl,
+        ReceiptHandle: receiptHandle,
+    });
+
+    await client.send(command);
+};
 
 // Function to query PSAs and platforms for Aside members
 const getPSAsAndPlatformsOfAsideMembers = async (asideId) => {
@@ -16,59 +43,54 @@ const getPSAsAndPlatformsOfAsideMembers = async (asideId) => {
         INNER JOIN Aside ON UserAside.AsideId = Aside.AsideId
         WHERE Aside.AsideId = ?;
     `;
+
+    console.log('About to check DB');
     const [rows] = await dbConnection.execute(query, [asideId]);
-    return rows.map(row => ({ PSA: row.PSA, platform: row.platform }));
-};
-
-// Receive message from first SQS
-const receiveMessageFromSQS = async () => {
-    const command = new ReceiveMessageCommand({
-        QueueUrl: SQS_INBOUND_QUEUE_URL,
-        MaxNumberOfMessages: 1,
-        WaitTimeSeconds: 10,
-    });
-
-    const response = await sqsClient.send(command);
-    if (response.Messages && response.Messages.length > 0) {
-        const message = response.Messages[0];
-        return { body: JSON.parse(message.Body), receiptHandle: message.ReceiptHandle };
-    }
-    return null;
+    console.log(rows);
+    return rows.map(row => ({ PSA: row.PSA, platform: row.Platform }));
 };
 
 // Process message
 const processMessage = async () => {
-    // Receive a message from the first SQS
-    const received = await receiveMessageFromSQS();
-    if (!received) {
+    console.log("Checking for messages in the inbound queue...");
+
+    // Receive a message from the SQS queue
+    const messages = await receiveMessages(SQS_INBOUND_QUEUE_URL, 1, 10); // Receive 1 message, wait for 10 seconds
+
+    if (messages.length === 0) {
         console.log("No messages received.");
         return;
     }
 
-    const { asideID, MSG } = received.body; // Extract AsideID and MSG
-    console.log(`Received AsideID: ${asideID}, Message: ${MSG}`);
+    const message = messages[0];
+    const { Body, ReceiptHandle } = message;
 
-    // Query the PSAs and platforms for all Aside members
-    const psaData = await getPSAsAndPlatformsOfAsideMembers(asideID);
-    console.log(`Retrieved PSA data for Aside ${asideID}:`, psaData);
+    try {
+        // Parse the message body
+        const parsedBody = JSON.parse(Body); // First parse to handle escaped JSON
+        const { sender, body: messageBody, subject: asideID } = parsedBody; // Extract required fields
+        const asideIdInt = parseInt(asideID, 10); // Convert AsideID to an integer
+        console.log(`Received Sender: ${sender}, AsideID: ${asideIdInt}, Message: ${messageBody}`);
 
-    // Send messages to each PSA based on their platform
-    for (const { PSA, platform } of psaData) {
-        const sender = getMessageSender(platform); // Get platform-specific sender
-        const jsonBlob = { PSA, MSG }; // Construct the JSON blob
+        // Query the PSAs and platforms for all Aside members using the subject as the AsideID
+        const psaData = await getPSAsAndPlatformsOfAsideMembers(asideIdInt);
+        console.log(`Retrieved PSA data for Aside ${asideIdInt}:`, psaData);
 
-        console.log(`Sending message to PSA ${PSA} on platform ${platform}`);
-        await sender.sendMessage(jsonBlob);
+        // Send messages to each PSA based on their platform
+        for (const { PSA, platform } of psaData) {
+            const sender = getMessageSender(platform); // Get platform-specific sender
+            const jsonBlob = { PSA, MSG: messageBody }; // Construct the JSON blob
+
+            console.log(`Sending message to PSA ${PSA} on platform ${platform}`);
+            await sender.sendMessage(jsonBlob); // Send the message using the platform-specific sender
+        }
+
+        // Delete the message from the SQS after processing
+        await deleteMessage(SQS_INBOUND_QUEUE_URL, ReceiptHandle);
+        console.log("Processed and deleted the message from SQS.");
+    } catch (error) {
+        console.error(`Error processing message: ${error.message}`);
     }
-
-    // Delete the message from the SQS after processing
-    await sqsClient.send(
-        new DeleteMessageCommand({
-            QueueUrl: SQS_INBOUND_QUEUE_URL,
-            ReceiptHandle: received.receiptHandle,
-        })
-    );
-    console.log("Processed and deleted the message from SQS.");
 };
 
 // Example usage
