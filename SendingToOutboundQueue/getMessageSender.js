@@ -5,9 +5,9 @@ const EmailSender = require("./SendToOutboundEmail");
 // Function to return the appropriate message sender
 const getMessageSender = (platform) => {
     switch (platform) {
-        case "slack":
+        case "Slack":
             return new SlackSender(); // Slack sender logic
-        case "email":
+        case "Email":
             return new EmailSender(); // Email sender logic
         default:
             throw new Error(`Unsupported platform: ${platform}`);

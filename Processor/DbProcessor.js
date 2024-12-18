@@ -10,8 +10,6 @@ const { AWS_REGION, SQS_INBOUND_QUEUE_URL } = process.env;
 // Create SQS client
 const client = new SQSClient({ region: AWS_REGION });
 
-
-
 // Function to receive messages
 const receiveMessages = async (queueUrl, maxNumberOfMessages = 1, waitTimeSeconds = 10) => {
     const command = new ReceiveMessageCommand({
@@ -39,15 +37,22 @@ const getPSAsAndPlatformsOfAsideMembers = async (asideId) => {
     const query = `
         SELECT Accounts.PSA, Accounts.Platform
         FROM Accounts
-        INNER JOIN UserAside ON Accounts.UserID = UserAside.UserID
-        INNER JOIN Aside ON UserAside.AsideId = Aside.AsideId
+                 INNER JOIN UserAside ON Accounts.UserID = UserAside.UserID
+                 INNER JOIN Aside ON UserAside.AsideId = Aside.AsideId
         WHERE Aside.AsideId = ?;
     `;
 
-    console.log('About to check DB');
-    const [rows] = await dbConnection.execute(query, [asideId]);
-    console.log(rows);
-    return rows.map(row => ({ PSA: row.PSA, platform: row.Platform }));
+    console.log('About to check DB for Aside ID:', asideId);
+    const rows = await dbConnection.execute(query, [asideId]); // Call execute directly
+    console.log('Rows retrieved from database:', rows); // Log the rows
+
+    // Ensure rows is an array before mapping
+    if (Array.isArray(rows)) {
+        return rows.map(row => ({ PSA: row.PSA, platform: row.Platform }));
+    } else {
+        console.error('Expected rows to be an array, but received:', rows);
+        return []; // Return an empty array if rows is not an array
+    }
 };
 
 // Process message
