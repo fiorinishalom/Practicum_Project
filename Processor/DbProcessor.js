@@ -1,7 +1,8 @@
 const dbConnection = require("../Components/DB_Conn");
 const getMessageSender = require("../SendingToOutboundQueue/getMessageSender");
-const { ReceiveMessageCommand, DeleteMessageCommand } = require("@aws-sdk/client-sqs");
 const sqsClient = require("../Components/SQSClient");
+const {ReceiveMessageCommand} = require("@aws-sdk/client-sqs");
+
 
 require("dotenv").config({ path: "../Secrets/secrets.env" });
 const { SQS_INBOUND_QUEUE_URL } = process.env;
