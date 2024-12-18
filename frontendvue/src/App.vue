@@ -36,17 +36,15 @@ async function fetchInfo() {
       body: JSON.stringify({ id: id.value }),
     };
 
-    console.log("in1");
     const response = await fetch(url, options);
-    console.log("in2", response);
 
     if (!response.ok) {
-      console.log("out");
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+
     const data = await response.json();
-    console.log("data ", data);
     asides.value = data;
+
   } catch (error) {
     console.error('There was a problem with the fetch operation:', error);
     throw error;
