@@ -10,19 +10,7 @@ const { AWS_REGION, SQS_INBOUND_QUEUE_URL } = process.env;
 // Create SQS client
 const client = new SQSClient({ region: AWS_REGION });
 
-// Function to send a message
-const sendMessage = async (queueUrl, message) => {
-    if (!queueUrl || !message) {
-        throw new Error("Queue URL and message body are required.");
-    }
 
-    const command = new SendMessageCommand({
-        QueueUrl: queueUrl,
-        MessageBody: JSON.stringify(message), // Ensure message is a string
-    });
-
-    await client.send(command);
-};
 
 // Function to receive messages
 const receiveMessages = async (queueUrl, maxNumberOfMessages = 1, waitTimeSeconds = 10) => {
