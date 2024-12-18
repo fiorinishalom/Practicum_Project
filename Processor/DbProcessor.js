@@ -1,5 +1,5 @@
 // Import necessary libraries
-const { SQSClient, SendMessageCommand, ReceiveMessageCommand, DeleteMessageCommand } = require("@aws-sdk/client-sqs");
+const { SQSClient,  ReceiveMessageCommand, DeleteMessageCommand } = require("@aws-sdk/client-sqs");
 const dbConnection = require("../Components/DB_Conn");
 const getMessageSender = require("../SendingToOutboundQueue/getMessageSender");
 require("dotenv").config({ path: "../Secrets/secrets.env" });
