@@ -23,7 +23,7 @@ class SendToOutboundEmail {
 
         const mailOptions = {
             from: 'fiorini.shalom@gmail.com',  // Sender's email
-            to: jsonBlob.recipient || 'default@example.com', // Recipient's email
+            to: jsonBlob.PSA || 'default@example.com', // Recipient's email
             subject: 'Your Custom Subject', // Email subject
             text: emailMessage.MSG || 'No Body Provided', // Plain text body
         };
