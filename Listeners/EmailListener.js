@@ -11,7 +11,6 @@ const { fromEnv } = require('@aws-sdk/credential-provider-env');
 const Secrets_path = path.resolve(__dirname, '../Secrets/secrets.env');
 
 
-// Validate the path to the secrets.env file
 if (!fs.existsSync(Secrets_path)) {
     throw new Error(`Secrets file not found at path: ${Secrets_path}`);
 }

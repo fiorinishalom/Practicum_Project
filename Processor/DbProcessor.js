@@ -1,10 +1,8 @@
-// Import necessary libraries
 const { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } = require("@aws-sdk/client-sqs");
 const dbConnection = require("../Components/DB_Conn");
 const getMessageSender = require("../SendingToOutboundQueue/getMessageSender");
 require("dotenv").config({ path: "../Secrets/secrets.env" });
 
-// Load environment variables
 const { AWS_REGION, SQS_INBOUND_QUEUE_URL } = process.env;
 
 // Create SQS client
@@ -37,8 +35,8 @@ const getPSAsAndPlatformsOfAsideMembers = async (asideId) => {
     const query = `
         SELECT Accounts.PSA, Accounts.Platform
         FROM Accounts
-                 INNER JOIN UserAside ON Accounts.UserID = UserAside.UserID
-                 INNER JOIN Aside ON UserAside.AsideId = Aside.AsideId
+        JOIN UserAside ON Accounts.UserID = UserAside.UserID
+        JOIN Aside ON UserAside.AsideId = Aside.AsideId
         WHERE Aside.AsideId = ?;
     `;
 
