@@ -72,17 +72,19 @@ const processMessage = async () => {
         // Parse the message body
         const parsedBody = JSON.parse(Body); // First parse to handle escaped JSON
         const { sender, body: messageBody, subject: asideID } = parsedBody; // Extract required fields
-        const asideIdInt = parseInt(asideID, 10); // Convert AsideID to an integer
+        const asideIdInt = parseInt(asideID, 10); //
         console.log(`Received Sender: ${sender}, AsideID: ${asideIdInt}, Message: ${messageBody}`);
+
 
         // Query the PSAs and platforms for all Aside members using the subject as the AsideID
         const psaData = await getPSAsAndPlatformsOfAsideMembers(asideIdInt);
         console.log(`Retrieved PSA data for Aside ${asideIdInt}:`, psaData);
 
+
         // Send messages to each PSA based on their platform
         for (const { PSA, platform } of psaData) {
             const sender = getMessageSender(platform); // Get platform-specific sender
-            const jsonBlob = { PSA, MSG: messageBody }; // Construct the JSON blob
+            const jsonBlob = { PSA, MSG: messageBody };
 
             console.log(`Sending message to PSA ${PSA} on platform ${platform}`);
             await sender.sendMessage(jsonBlob); // Send the message using the platform-specific sender
