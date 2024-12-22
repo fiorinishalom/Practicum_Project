@@ -1,34 +1,10 @@
-const { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } = require("@aws-sdk/client-sqs");
+const SQSClient = require("../Components/SQSClient");
 const dbConnection = require("../Components/DB_Conn");
 const getMessageSender = require("../SendingToOutboundQueue/getMessageSender");
 require("dotenv").config({ path: "../Secrets/secrets.env" });
 
-const { AWS_REGION, SQS_INBOUND_QUEUE_URL } = process.env;
+const {SQS_INBOUND_QUEUE_URL } = process.env;
 
-// Create SQS client
-const client = new SQSClient({ region: AWS_REGION });
-
-// Function to receive messages
-const receiveMessages = async (queueUrl, maxNumberOfMessages = 1, waitTimeSeconds = 10) => {
-    const command = new ReceiveMessageCommand({
-        QueueUrl: queueUrl,
-        MaxNumberOfMessages: maxNumberOfMessages,
-        WaitTimeSeconds: waitTimeSeconds,
-    });
-
-    const response = await client.send(command);
-    return response.Messages || [];
-};
-
-// Function to delete a message
-const deleteMessage = async (queueUrl, receiptHandle) => {
-    const command = new DeleteMessageCommand({
-        QueueUrl: queueUrl,
-        ReceiptHandle: receiptHandle,
-    });
-
-    await client.send(command);
-};
 
 // Function to query PSAs and platforms for Aside members
 const getPSAsAndPlatformsOfAsideMembers = async (asideId) => {
@@ -58,7 +34,7 @@ const processMessage = async () => {
     console.log("Checking for messages in the inbound queue...");
 
     // Receive a message from the SQS queue
-    const messages = await receiveMessages(SQS_INBOUND_QUEUE_URL, 1, 10); // Receive 1 message, wait for 10 seconds
+    const messages = await SQSClient.receiveMessages(SQS_INBOUND_QUEUE_URL, 1, 10); // Receive 1 message, wait for 10 seconds
 
     if (messages.length === 0) {
         console.log("No messages received.");
@@ -91,7 +67,7 @@ const processMessage = async () => {
         }
 
         // Delete the message from the SQS after processing
-        await deleteMessage(SQS_INBOUND_QUEUE_URL, ReceiptHandle);
+        await SQSClient.deleteMessage(SQS_INBOUND_QUEUE_URL, ReceiptHandle);
         console.log("Processed and deleted the message from SQS.");
     } catch (error) {
         console.error(`Error processing message: ${error.message}`);

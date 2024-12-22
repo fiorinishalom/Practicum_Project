@@ -1,23 +1,43 @@
-// Components/SQSClient.js
-const { SQSClient, SendMessageCommand } = require("@aws-sdk/client-sqs");
-require("dotenv").config({ path: '../secrets.env' });
+const { SQSClient, ReceiveMessageCommand, DeleteMessageCommand, SendMessageCommand } = require("@aws-sdk/client-sqs");
 
-const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY } = process.env;
+class SQSClientWrapper {
+    // Static instance of the SQS client with a hardcoded region
+    static client = new SQSClient({ region: "us-east-1" });
 
-const client = new SQSClient({
-    region: AWS_REGION,
-    credentials: {
-        accessKeyId: AWS_ACCESS_KEY_ID,
-        secretAccessKey: AWS_SECRET_ACCESS_KEY,
-    },
-});
+    // Static method to receive messages from the SQS queue
+    static async receiveMessages(queueUrl, maxNumberOfMessages = 1, waitTimeSeconds = 10) {
+        const command = new ReceiveMessageCommand({
+            QueueUrl: queueUrl,
+            MaxNumberOfMessages: maxNumberOfMessages,
+            WaitTimeSeconds: waitTimeSeconds,
+        });
 
-const sendMessage = async (queueUrl, message) => {
-    const command = new SendMessageCommand({
-        QueueUrl: queueUrl,
-        MessageBody: message,
-    });
-    return client.send(command);
-};
+        const response = await this.client.send(command);
+        return response.Messages || [];
+    }
 
-module.exports = { sendMessage };
+    // Static method to delete a message from the SQS queue
+    static async deleteMessage(queueUrl, receiptHandle) {
+        const command = new DeleteMessageCommand({
+            QueueUrl: queueUrl,
+            ReceiptHandle: receiptHandle,
+        });
+
+        await this.client.send(command);
+    }
+
+    // Static method to send a message to the SQS queue
+    static async sendMessage(queueUrl, messageBody, delaySeconds = 0) {
+        const command = new SendMessageCommand({
+            QueueUrl: queueUrl,
+            MessageBody: JSON.stringify(messageBody),
+            DelaySeconds: delaySeconds,
+        });
+
+        const response = await this.client.send(command);
+        return response.MessageId;
+    }
+}
+
+// Export the class itself
+module.exports = SQSClientWrapper;
