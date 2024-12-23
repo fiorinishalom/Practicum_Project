@@ -63,12 +63,12 @@ const platformFinder = (userCommand) => {
     switch (true) {
         case userCommand.includes("slack"):
             psa = "Slack";
-            break;
+            return psa;
         case userCommand.includes("email"):
             psa = "Email";
-            break;
+            return psa;
         default:
-            psa = "Unknown"; // Optional: handle cases where no match is found
+            return "Unknown"; // Optional: handle cases where no match is found
     }
 }
 
@@ -114,11 +114,20 @@ const processMessage = async () => {
 
             // Send messages to each PSA based on their platform
             for (const {PSA, platform} of psaData) {
-                const sender = getMessageSender(platform); // Get platform-specific sender
-                const jsonBlob = {PSA, MSG: messageBody};
 
-                console.log(`Sending message to PSA ${PSA} on platform ${platform}`);
-                await sender.sendMessage(jsonBlob); // Send the message using the platform-specific sender
+                const outJsonBlob = {
+                    Platform: platform,
+                    PSA: PSA,
+                    MSG: messageBody
+                };
+
+                await SQSClient.sendMessage(SQS_OUTBOUND_QUEUE_URL, outJsonBlob);
+
+                // const sender = getMessageSender(platform); // Get platform-specific sender
+                // const jsonBlob = {PSA, MSG: messageBody};
+                //
+                // console.log(`Sending message to PSA ${PSA} on platform ${platform}`);
+                // await sender.sendMessage(jsonBlob); // Send the message using the platform-specific sender
             }
         }
 
