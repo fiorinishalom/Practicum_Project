@@ -1,4 +1,5 @@
-const mysql = require('mysql2/promise'); // Assuming you're using mysql2
+const mysql = require('mysql2/promise');
+const dbConnection = require("./DB_Conn");
 require("dotenv").config({ path: "../Secrets/secrets.env" });
 
 const pool = mysql.createPool({
@@ -16,4 +17,43 @@ const execute = async (query, params) => {
     return rows;
 };
 
-module.exports = { execute };
+const executeAddUser = async (platform, psa, asideId) => {
+    const insertAccountQuery = `
+        INSERT INTO Accounts (Platform, PSA, Role)
+        VALUES (?, ?, 'User');
+    `;
+    const params = [platform, psa, 'User'];
+    const [insertResult] = await pool.execute(insertAccountQuery, params);
+    const userId = insertResult.insertId; // Get the inserted ID directly
+
+    const insertUserAsideQuery = `
+        INSERT INTO UserAside (UserID, AsideID)
+        VALUES (?, ?);
+    `;
+    await pool.execute(insertUserAsideQuery, [userId, asideId]);
+
+    return { userId }; // Optionally return the user ID
+};
+
+const executeRemoveUser = async (psa, asideId) => {
+    const removeUser = `
+        DELETE ua, a
+        FROM UserAside ua
+        JOIN Accounts a ON ua.UserID = a.UserID
+        WHERE a.PSA = ? AND ua.AsideID = ? AND a.ROLE != 'Admin';
+    `;
+
+    try {
+        const params = [psa, asideId];
+        const [result] = await pool.execute(removeUser, params);
+
+        return result.affectedRows; // num of affected rows
+    } catch (error) {
+        console.error("Error removing user:", error);
+        throw error; // Propagate the error to be handled by the caller
+    }
+};
+
+
+
+module.exports = { execute, executeAddUser, executeRemoveUser };
