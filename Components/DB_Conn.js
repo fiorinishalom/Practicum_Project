@@ -1,5 +1,4 @@
 const mysql = require('mysql2/promise');
-const dbConnection = require("./DB_Conn");
 require("dotenv").config({ path: "../Secrets/secrets.env" });
 
 const pool = mysql.createPool({

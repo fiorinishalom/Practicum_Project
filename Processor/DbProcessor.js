@@ -1,7 +1,6 @@
 const SQSClient = require("../Components/SQSClient");
 const dbConnection = require("../Components/DB_Conn");
 const getMessageSender = require("../SendingToOutboundQueue/getMessageSender");
-const {getConnection} = require("mysql/lib/Pool");
 require("dotenv").config({path: "../Secrets/secrets.env"});
 
 const {SQS_INBOUND_QUEUE_URL, SQS_OUTBOUND_QUEUE_URL} = process.env;
