@@ -123,11 +123,7 @@ const processMessage = async () => {
 
                 await SQSClient.sendMessage(SQS_OUTBOUND_QUEUE_URL, outJsonBlob);
 
-                // const sender = getMessageSender(platform); // Get platform-specific sender
-                // const jsonBlob = {PSA, MSG: messageBody};
-                //
-                // console.log(`Sending message to PSA ${PSA} on platform ${platform}`);
-                // await sender.sendMessage(jsonBlob); // Send the message using the platform-specific sender
+
             }
         }
 
