@@ -17,22 +17,43 @@ const execute = async (query, params) => {
 };
 
 const executeAddUser = async (platform, psa, asideId) => {
-    const insertAccountQuery = `
-        INSERT INTO Accounts (Platform, PSA, Role)
-        VALUES (?, ?, 'User');
-    `;
-    const params = [platform, psa, 'User'];
-    const [insertResult] = await pool.execute(insertAccountQuery, params);
-    const userId = insertResult.insertId; // Get the inserted ID directly
+    try {
+        // Check if the PSA already exists in the Accounts table
+        const checkPSAQuery = `
+            SELECT COUNT(*) AS count
+            FROM Accounts
+            WHERE PSA = ?;
+        `;
+        const [checkResult] = await pool.execute(checkPSAQuery, [psa]);
 
-    const insertUserAsideQuery = `
-        INSERT INTO UserAside (UserID, AsideID)
-        VALUES (?, ?);
-    `;
-    await pool.execute(insertUserAsideQuery, [userId, asideId]);
+        if (checkResult[0].count > 0) {
+            throw new Error("PSA already exists. Cannot add duplicate account.");
+        }
 
-    return { userId }; // Optionally return the user ID
+        // Insert into Accounts if PSA does not exist
+        const insertAccountQuery = `
+            INSERT INTO Accounts (Platform, PSA, Role)
+            VALUES (?, ?, 'User');
+        `;
+        const [insertResult] = await pool.execute(insertAccountQuery, [platform, psa]);
+
+        // Get the inserted UserID
+        const userId = insertResult.insertId;
+
+        // Insert into UserAside
+        const insertUserAsideQuery = `
+            INSERT INTO UserAside (UserID, AsideID)
+            VALUES (?, ?);
+        `;
+        await pool.execute(insertUserAsideQuery, [userId, asideId]);
+
+        return { userId }; // Optionally return the user ID
+    } catch (error) {
+        console.error("Error adding user:", error.message);
+        throw error; // Propagate error to the caller
+    }
 };
+
 
 const executeRemoveUser = async (psa, asideId) => {
     const removeUser = `
@@ -53,6 +74,8 @@ const executeRemoveUser = async (psa, asideId) => {
     }
 };
 
+const logMessage = async ()
 
 
-module.exports = { execute, executeAddUser, executeRemoveUser };
+
+module.exports = { execute, executeAddUser, executeRemoveUser, logMessage };
