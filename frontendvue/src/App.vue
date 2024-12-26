@@ -11,8 +11,13 @@
     </div>
     <div class="main-content">
       <h3>Messages</h3>
-      <!-- Future message content goes here -->
-      <p>Select a group chat to view messages.</p>
+      <!-- Show messages when a chat is selected -->
+      <div v-if="asideMessages.length > 0">
+        <div v-for="message in asideMessages" :key="message.id" class="message-item">
+          {{ message.text }}
+        </div>
+      </div>
+      <p v-else>Select a group chat to view messages.</p>
     </div>
   </div>
 </template>
@@ -22,9 +27,11 @@ import InputNumber from 'primevue/inputnumber';
 import Button from 'primevue/button';
 import { ref } from 'vue';
 
-const id = ref();
-const asides = ref([]);
-const asideMessages = ref([]);
+const id = ref(); // User ID
+const asides = ref([]); // List of group chats
+const asideMessages = ref([]); // Messages for the selected group chat
+
+// Fetch the list of group chats for a user
 async function fetchInfo() {
   try {
     const url = 'http://localhost:3000/groups';
@@ -44,53 +51,78 @@ async function fetchInfo() {
 
     const data = await response.json();
     asides.value = data;
-
   } catch (error) {
     console.error('There was a problem with the fetch operation:', error);
-    throw error;
   }
 }
 
-function selectChat(aside) {
-  // Handle chat selection (e.g., fetch messages for the selected chat)
-  console.log("Selected chat:", aside);
-  asideMessages.value = [];
+// Fetch messages for the selected group chat
+async function selectChat(aside) {
+  try {
+    console.log('Asides:', asides.value);
+
+    const url = 'http://localhost:3000/messages';
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ asideName: aside.asideName }),
+    };
+
+    const response = await fetch(url, options);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    asideMessages.value = data; // Update the messages for the selected group chat
+  } catch (error) {
+    console.error('There was a problem with the fetch operation:', error);
+  }
 }
 </script>
 
 <style scoped>
 .layout {
   display: flex;
-  height: 100vh; /* Full height for the layout */
+  height: 100vh;
 }
 
 .sidebar {
-  width: 25%; /* 1/4 of the width */
-  padding: 20px; /* Padding for the sidebar */
-  background-color: #f7f7f7; /* Light background for the sidebar */
-  border-right: 1px solid #ddd; /* Right border for separation */
+  width: 25%;
+  padding: 20px;
+  background-color: #f7f7f7;
+  border-right: 1px solid #ddd;
 }
 
 .chat-item {
-  padding: 10px; /* Padding for each chat item */
-  margin: 5px 0; /* Margin between items */
-  border: 1px solid transparent; /* Border for hover effect */
-  border-radius: 5px; /* Rounded corners */
-  cursor: pointer; /* Pointer cursor to indicate clickable item */
-  transition: background-color 0.3s, border-color 0.3s; /* Smooth transition */
+  padding: 10px;
+  margin: 5px 0;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s, border-color 0.3s;
 }
 
 .chat-item:hover {
-  background-color: #e3f2fd; /* Light blue background on hover */
-  border-color: #90caf9; /* Blue border on hover */
+  background-color: #e3f2fd;
+  border-color: #90caf9;
 }
 
 .main-content {
-  width: 75%; /* 3/4 of the width */
-  padding: 20px; /* Padding for the main content */
+  width: 75%;
+  padding: 20px;
+}
+
+.message-item {
+  padding: 10px;
+  margin: 5px 0;
+  border-bottom: 1px solid #ddd;
 }
 
 h3 {
-  margin-top: 0; /* Remove margin on top of headings */
+  margin-top: 0;
 }
 </style>

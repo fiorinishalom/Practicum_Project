@@ -1,4 +1,4 @@
-const dbreqs = require("./dbreqs");
+const dbreqs = require("../Server/dbreqs");
 const express = require('express')
 const cors = require('cors')
 const app = express()
@@ -29,14 +29,18 @@ app.post('/groups', async (req, res) => {
 
 app.post('/messages', async (req, res) => {
     try {
-        const id = req.body.id;
-        const asides = await dbreqs.getMessagesFromAside(id);
-        res.send(asides);
+        const asideName = req.body.asideName; // Receive the asideName
+        console.log('Received asideName:', asideName); // Log for debugging
+
+        // Assuming `dbreqs.getMessagesByAsideName` is a method to fetch messages by asideName
+        const messages = await dbreqs.getMessagesByAsideName(asideName);
+        res.send(messages);
     } catch (error) {
-        console.error('Error handling /groups request:', error);
+        console.error('Error handling /messages request:', error);
         res.status(500).send('An error occurred while processing your request.');
     }
 });
+
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)

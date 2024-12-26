@@ -2,6 +2,7 @@ const mysql = require("mysql2/promise");
 require("dotenv").config({ path: '../Secrets/secrets.env' });
 
 // Create a pool for better connection management
+
 const dbPool = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -9,54 +10,37 @@ const dbPool = mysql.createPool({
     database: process.env.DB_NAME,
 });
 
+const queryDatabase = async (query, params) => {
+    try {
+        const connection = await dbPool.getConnection();
+        const [rows] = await connection.query(query, params);
+        connection.release();
+        return rows;
+    } catch (error) {
+        console.error('Database query error:', error);
+        throw error;
+    }
+};
+
 const getAllAsidesOfUser = async (userId) => {
     const query = `
-    SELECT Aside.AsideID, Aside.asideName
+        SELECT Aside.AsideID, Aside.asideName
         FROM Aside
         JOIN UserAside ON Aside.AsideID = UserAside.AsideID
         JOIN Accounts ON UserAside.userID = Accounts.userID
         WHERE Accounts.userId = ?;
     `;
-
-    try {
-        // Get a connection from the pool
-        const connection = await dbPool.getConnection();
-        const [rows] = await connection.query(query, [userId]);
-        
-        // Release the connection back to the pool
-        connection.release();
-        
-        return rows;
-    } catch (error) {
-        console.error('Error fetching asides:', error);
-        throw error; // Rethrow the error for further handling if needed
-    }
+    return queryDatabase(query, [userId]);
 };
 
-const getMessagesFromAside = async (asideId) => {
+const getMessagesByAsideName = async (asideName) => {
     const query = `
-    SELECT Aside.AsideID, Aside.asideName
-        FROM Aside
-        JOIN UserAside ON Aside.AsideID = UserAside.AsideID
-        JOIN Accounts ON UserAside.userID = Accounts.userID
-        WHERE Accounts.userId = ?;
+        SELECT Messages
+        FROM MessageLog
+        JOIN Aside ON Aside.AsideID = MessageLog.AsideID
+        WHERE Aside.AsideName = ?;
     `;
-
-    try {
-        // Get a connection from the pool
-        const connection = await dbPool.getConnection();
-        const [rows] = await connection.query(query, [userId]);
-        
-        // Release the connection back to the pool
-        connection.release();
-        
-        return rows;
-    } catch (error) {
-        console.error('Error fetching asides:', error);
-        throw error; // Rethrow the error for further handling if needed
-    }
+    return queryDatabase(query, [asideName]);
 };
 
-
-
-module.exports = { getAllAsidesOfUser, getMessagesFromAside };
+module.exports = { getAllAsidesOfUser, getMessagesByAsideName };
