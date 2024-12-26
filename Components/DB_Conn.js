@@ -74,7 +74,13 @@ const executeRemoveUser = async (psa, asideId) => {
     }
 };
 
-const logMessage = async ()
+const logMessage = async (asideID, UserID, msg) => {
+    const addMessage = `
+    INSERT INTO MessageLog(AsideID, UserID, Content) 
+    VALUES (?, ?, ?);
+    `
+    await pool.execute(addMessage, [asideID, UserID, msg]);
+}
 
 
 

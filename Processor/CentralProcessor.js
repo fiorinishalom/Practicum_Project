@@ -1,29 +1,32 @@
 const SQSClient = require("../Components/SQSClient");
 const dbConnection = require("../Components/DB_Conn");
+const {logMessage} = require("../Components/DB_Conn");
 require("dotenv").config({path: "../Secrets/secrets.env"});
 
 const {SQS_INBOUND_QUEUE_URL, SQS_OUTBOUND_QUEUE_URL} = process.env;
 
-const getUserIDFromPSA = async (sender) => {
+const verifySender = async (sender) => {
     const query = `
-        SELECT PSA
+        SELECT PSA, UserID, Username
         FROM Accounts
+                 JOIN AdminCredentials
+                      ON Accounts.UserID = AdminCredentials.AdminID
         WHERE PSA = ?;
     `;
     console.log("About to check DB for PSA");
 
-    const rows = await dbConnection.execute(query, [sender]);
-    console.log("Rows retrieved from database:", rows);
+    try {
+        const [rows] = await dbConnection.execute(query, [sender]);
+        console.log("Rows retrieved from database:", rows);
 
-    const authUsers = Array.isArray(rows) ? rows.map(row => ({PSA: row.PSA, platform: row.Platform})) : [];
-
-    for (const {PSA} of authUsers) {
-        if (sender === PSA) {
-            return true;
-        }
+        // Return the first matching row if it exists, otherwise return null
+        return rows.length > 0 ? rows[0] : null;
+    } catch (error) {
+        console.error("Error verifying sender:", error.message);
+        throw error;
     }
-    return false;
 };
+
 
 // Function to query PSAs and platforms for Aside members
 const getPSAsAndPlatformsOfAsideMembers = async (asideId) => {
@@ -104,7 +107,11 @@ const processMessage = async () => {
         } else if (userCommand.includes("#stop")) {
             await removeRegUser(sender, asideIdInt);
         } else {
-            if (await getUserIDFromPSA(sender)) {
+            const senderInfo = await verifySender(sender);
+            if (senderInfo != null) {
+                const {UserID, Username} = senderInfo;
+                await logMessage(asideIdInt, UserID, Username);
+
                 const psaData = await getPSAsAndPlatformsOfAsideMembers(asideIdInt);
                 console.log(`Retrieved PSA data for Aside ${asideIdInt}:`, psaData);
 
