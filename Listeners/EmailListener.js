@@ -67,6 +67,7 @@ async function processEmail(email) {
             body: parsed.text,
             subject: parsed.subject
         };
+        emailJson.sender = emailJson.sender.match(/<([^>]+)>/)[1];
 
         console.log("Email received:", emailJson);
 
