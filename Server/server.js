@@ -29,11 +29,11 @@ app.post('/groups', async (req, res) => {
 
 app.post('/messages', async (req, res) => {
     try {
-        const asideName = req.body.asideName; // Receive the asideName
-        console.log('Received asideName:', asideName); // Log for debugging
+        const asideId = req.body.asideId; // Receive the asideName
+        console.log('Received asideName:', asideId); // Log for debugging
 
         // Assuming `dbreqs.getMessagesByAsideName` is a method to fetch messages by asideName
-        const messages = await dbreqs.getMessagesByAsideName(asideName);
+        const messages = await dbreqs.getMessagesByAsideName(asideId);
         res.send(messages);
     } catch (error) {
         console.error('Error handling /messages request:', error);

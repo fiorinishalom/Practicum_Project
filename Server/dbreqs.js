@@ -33,14 +33,13 @@ const getAllAsidesOfUser = async (userId) => {
     return queryDatabase(query, [userId]);
 };
 
-const getMessagesByAsideName = async (asideName) => {
+const getMessagesByAsideName = async (asideId) => {
     const query = `
-        SELECT Messages
+        SELECT Content
         FROM MessageLog
-        JOIN Aside ON Aside.AsideID = MessageLog.AsideID
-        WHERE Aside.AsideName = ?;
+        WHERE AsideID = ?;
     `;
-    return queryDatabase(query, [asideName]);
+    return queryDatabase(query, [asideId]);
 };
 
 module.exports = { getAllAsidesOfUser, getMessagesByAsideName };

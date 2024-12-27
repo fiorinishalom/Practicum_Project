@@ -12,10 +12,13 @@
     <div class="main-content">
       <h3>Messages</h3>
       <!-- Show messages when a chat is selected -->
-      <div v-if="asideMessages.length > 0">
-        <div v-for="message in asideMessages" :key="message.id" class="message-item">
-          {{ message.text }}
+      <div v-if="currentAside.messages.length > 0">
+        <div v-for="message in currentAside.messages" :key="message.id" class="message">
+          {{ message.Content }}
         </div>
+      </div>
+      <div v-else>
+       No Messages
       </div>
       <p v-else>Select a group chat to view messages.</p>
     </div>
@@ -29,7 +32,7 @@ import { ref } from 'vue';
 
 const id = ref(); // User ID
 const asides = ref([]); // List of group chats
-const asideMessages = ref([]); // Messages for the selected group chat
+const currentAside = ref({ meta:null, messages:[] });
 
 // Fetch the list of group chats for a user
 async function fetchInfo() {
@@ -59,7 +62,7 @@ async function fetchInfo() {
 // Fetch messages for the selected group chat
 async function selectChat(aside) {
   try {
-    console.log('Asides:', asides.value);
+    console.log('Asides:', aside.AsideID);
 
     const url = 'http://localhost:3000/messages';
     const options = {
@@ -67,7 +70,7 @@ async function selectChat(aside) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ asideName: aside.asideName }),
+      body: JSON.stringify({ asideId: aside.AsideID }),
     };
 
     const response = await fetch(url, options);
@@ -77,7 +80,8 @@ async function selectChat(aside) {
     }
 
     const data = await response.json();
-    asideMessages.value = data; // Update the messages for the selected group chat
+    currentAside.value.meta = aside;
+    currentAside.value.messages = data;
   } catch (error) {
     console.error('There was a problem with the fetch operation:', error);
   }
@@ -124,5 +128,19 @@ async function selectChat(aside) {
 
 h3 {
   margin-top: 0;
+}
+
+.message {
+  background-color: #e3f2fd;
+  color: #0d47a1;
+  border-radius: 15px;
+  padding: 10px 15px;
+  max-width: 60%;
+  word-wrap: break-word;
+  margin: 10px 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  position: relative;
 }
 </style>
