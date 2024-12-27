@@ -42,4 +42,16 @@ const getMessagesByAsideName = async (asideId) => {
     return queryDatabase(query, [asideId]);
 };
 
-module.exports = { getAllAsidesOfUser, getMessagesByAsideName };
+const checkLogin = async (username, password) => {
+    const query = `
+        SELECT *
+        FROM AdminCredentials
+        WHERE Username = ? AND Password = ?
+            LIMIT 1;
+
+
+    `;
+    return queryDatabase(query, [username, password]);
+};
+
+module.exports = { getAllAsidesOfUser, getMessagesByAsideName, checkLogin };

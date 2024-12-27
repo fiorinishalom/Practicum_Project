@@ -41,6 +41,19 @@ app.post('/messages', async (req, res) => {
     }
 });
 
+app.post('/checkLogin', async (req, res) => {
+    try {
+        const username = req.body.username;
+        const password = req.body.password;
+
+        const login = await dbreqs.checkLogin(username,password);
+        res.send({status: //if this is good then 200 else 400, id:<>});
+    } catch (error) {
+        console.error('Error handling /messages request:', error);
+        res.status(500).send('An error occurred while processing your request.');
+    }
+});
+
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
