@@ -11,14 +11,24 @@ const routes = [
     },
     {
         path: '/login',
-        name: 'Login',
+        name: 'login',
         component: Login,
     },
 ];
 
 const router = createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL), // Use import.meta.env instead of process.env
+    history: createWebHistory(import.meta.env.BASE_URL), 
     routes,
+});
+
+router.beforeEach((to, from, next) => {
+    const loginCookie = document.cookie.split(';').find(cookie => cookie.trim().startsWith('login='));
+    
+    if (!loginCookie && to.name !== 'login') {
+        next({ name: 'login' });
+    } else {
+        next();
+    }
 });
 
 export default router;

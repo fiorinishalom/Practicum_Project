@@ -54,4 +54,14 @@ const checkLogin = async (username, password) => {
     return queryDatabase(query, [username, password]);
 };
 
-module.exports = { getAllAsidesOfUser, getMessagesByAsideName, checkLogin };
+const insertMessage = async (userId, asideId, msg) => {
+    const query = `
+    INSERT INTO MessageLog (UserID, AsideID, Content, Timestamp)
+    VALUES (?, ?, ?, NOW());
+`;
+    return queryDatabase(query, [userId,  asideId, msg]);
+};
+
+
+
+module.exports = { getAllAsidesOfUser, getMessagesByAsideName, checkLogin, insertMessage };

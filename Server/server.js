@@ -11,10 +11,6 @@ app.use(cors({
 app.use(express.json());
 
 
-// Your existing routes
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
 app.post('/groups', async (req, res) => {
     try {
         const id = req.body.id;
@@ -29,10 +25,7 @@ app.post('/groups', async (req, res) => {
 
 app.post('/messages', async (req, res) => {
     try {
-        const asideId = req.body.asideId; // Receive the asideName
-        console.log('Received asideName:', asideId); // Log for debugging
-
-        // Assuming `dbreqs.getMessagesByAsideName` is a method to fetch messages by asideName
+        const asideId = req.body.asideId;
         const messages = await dbreqs.getMessagesByAsideName(asideId);
         res.send(messages);
     } catch (error) {
@@ -43,17 +36,39 @@ app.post('/messages', async (req, res) => {
 
 app.post('/checkLogin', async (req, res) => {
     try {
-        const username = req.body.username;
-        const password = req.body.password;
+        const { username, password } = req.body;
+    
+         const login = await dbreqs.checkLogin(username, password);
 
-        const login = await dbreqs.checkLogin(username,password);
-        res.send({status: //if this is good then 200 else 400, id:<>});
+        console.log(login)
+
+
+        if (login && login.length > 0) {
+            res.status(200).send({ status: 200, data: login[0] });
+        } else {
+            res.status(400).send({ status: 400, data: null });
+        }
     } catch (error) {
         console.error('Error handling /messages request:', error);
         res.status(500).send('An error occurred while processing your request.');
     }
 });
 
+//add new messages to a given aside
+app.post('/addMessage', async (req, res) => {
+    try {
+        const { text, asideId, userId } = req.body;
+
+        console.log('Received message:', text, 'for asideId:', asideId, 'from user:', userId);
+        
+        await dbreqs.insertMessage(userId, asideId, text); 
+        
+        res.status(200).send({ status: 200, message: 'Message added successfully' });
+    } catch (error) {
+        console.error('Error handling /addMessage request:', error);
+        res.status(500).send('An error occurred while processing your request.');
+    }
+});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)

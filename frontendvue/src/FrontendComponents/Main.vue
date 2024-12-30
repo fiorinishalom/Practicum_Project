@@ -1,15 +1,17 @@
 <template>
   <div class="layout">
     <div class="sidebar">
+      <div>
       <h3>Group Chats</h3>
-      <InputNumber v-model="id" inputId="integeronly" placeholder="Enter ID" />
-      <Button label="Submit" @click="fetchInfo()" />
       <hr />
       <div v-for="aside in asides" :key="aside.id" class="chat-item" @click="selectChat(aside)">
         {{ aside.asideName }}
       </div>
     </div>
+      <Button icon="pi pi-sign-out" severity="danger" rounded variant="outlined" @click="handleLogout" />
+    </div>
     <div class="main-content">
+      <div style="overflow-y: scroll; height:100%;">
       <h3>Messages</h3>
       <!-- Show messages when a chat is selected -->
       <div v-if="currentAside.messages.length > 0">
@@ -17,25 +19,36 @@
           {{ message.Content }}
         </div>
       </div>
-      <div v-else>
-        No Messages
-      </div>
       <p v-else>Select a group chat to view messages.</p>
+    </div>
+    <div>
+      <SendMessage @send-message="sendMessage" v-if="currentAside.meta"/>
+    </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import SendMessage from './SendMessage.vue';
 import InputNumber from 'primevue/inputnumber';
 import Button from 'primevue/button';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
-const id = ref(); // User ID
 const asides = ref([]); // List of group chats
+const userId = ref(); 
 const currentAside = ref({ meta:null, messages:[] });
+const router = useRouter();
+const handleLogout = () => {
+  document.cookie = 'login=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+  router.push('/login');
+};
 
 // Fetch the list of group chats for a user
-async function fetchInfo() {
+async function fetchInfo(id) {
+      console.log(3)
+
+  console.log(id)
   try {
     const url = 'http://localhost:3000/groups';
     const options = {
@@ -43,7 +56,7 @@ async function fetchInfo() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ id: id.value }),
+      body: JSON.stringify({ id: id }),
     };
 
     const response = await fetch(url, options);
@@ -51,7 +64,6 @@ async function fetchInfo() {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
     const data = await response.json();
     asides.value = data;
   } catch (error) {
@@ -62,8 +74,6 @@ async function fetchInfo() {
 // Fetch messages for the selected group chat
 async function selectChat(aside) {
   try {
-    console.log('Asides:', aside.AsideID);
-
     const url = 'http://localhost:3000/messages';
     const options = {
       method: 'POST',
@@ -86,6 +96,43 @@ async function selectChat(aside) {
     console.error('There was a problem with the fetch operation:', error);
   }
 }
+
+// Send a message to an aside
+const sendMessage = async (message) => {
+  console.log(JSON.stringify({ text: message, asideId: currentAside.value.meta.AsideID, userId: userId.value }));
+  
+  try {
+    const response = await fetch('http://localhost:3000/addMessage', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: message, asideId: currentAside.value.meta.AsideID, userId: userId.value }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    selectChat(currentAside.value.meta.AsideID);
+
+  } catch (error) {
+    console.error('Error sending message:', error);
+  }
+};
+
+
+
+onMounted(() => {
+  const cookieValue = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith('login='))
+    ?.split('=')[1];
+  if (cookieValue) {
+    userId.value = cookieValue;
+    fetchInfo(cookieValue);
+  }
+});
 </script>
 
 <style scoped>
@@ -99,6 +146,9 @@ async function selectChat(aside) {
   padding: 20px;
   background-color: #f7f7f7;
   border-right: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .chat-item {
@@ -118,6 +168,9 @@ async function selectChat(aside) {
 .main-content {
   width: 75%;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .message-item {
@@ -143,4 +196,5 @@ h3 {
   font-size: 14px;
   position: relative;
 }
+
 </style>

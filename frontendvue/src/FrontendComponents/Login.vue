@@ -20,53 +20,47 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import  InputText  from 'primevue/inputtext';
 import  Password  from 'primevue/password';
 import  Button  from 'primevue/button';
 import  Card  from 'primevue/card';
 
+
+const router = useRouter();
+
 const username = ref('');
 const password = ref('');
 
-const handleLogin = async (username, password) => {
+const handleLogin = async () => {
   if (username.value && password.value) {
-
-
-
-
     try {
-
       const url = 'http://localhost:3000/checkLogin';
       const options = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ 
+          username: username.value, 
+          password: password.value 
+        }),
       };
 
       const response = await fetch(url, options);
-
-      if (!response.status) {
-        console.log("bad login info")
-      }else{
-
-      }
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
       const data = await response.json();
-      currentAside.value.meta = aside;
-      currentAside.value.messages = data;
+
+      console.log(data)
+
+      if (response.status === 200) {
+        document.cookie = `login=${data.data.AdminID}`;
+        router.push('/');
+      } else {
+        console.log("bad login info");
+      }
     } catch (error) {
       console.error('There was a problem with the fetch operation:', error);
     }
-
-
-
-
   } else {
     console.error('Please enter both username and password.');
   }
