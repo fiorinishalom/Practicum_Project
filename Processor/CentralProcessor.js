@@ -1,7 +1,6 @@
 const { Worker } = require('worker_threads');
 const path = require('path');
 const SQSClient = require("../Components/SQSClient");
-const {logMessage, verifySender} = require("../Components/DB_Conn");
 
 
 // Load environment variables from the .env file

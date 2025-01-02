@@ -81,7 +81,27 @@ const logMessage = async (asideID, UserID, msg) => {
     `
     await pool.execute(addMessage, [asideID, UserID, msg]);
 }
+const verifySender = async (senderPSA) => {
+    const query = `
+        SELECT PSA, UserID, Username
+        FROM Accounts
+        JOIN AdminCredentials
+        ON Accounts.UserID = AdminCredentials.AdminID
+        WHERE PSA = ? AND Role = "Admin"
+            LIMIT 1;
+    `;
+
+    console.log("About to check DB for PSA");
+    try {
+        const result = await pool.execute(query, [senderPSA]);
+        console.log("Rows retrieved from database:", result);
+        return result[0][0];
+    } catch (error) {
+        console.error("Error verifying senderPSA:", error.message);
+        throw error;
+    }
+};
 
 
 
-module.exports = { execute, executeAddUser, executeRemoveUser, logMessage };
+module.exports = { execute, executeAddUser, executeRemoveUser, logMessage, verifySender };
