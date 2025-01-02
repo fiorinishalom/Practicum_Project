@@ -4,7 +4,8 @@ const SQSClient = require("../Components/SQSClient");
 
 // Load environment variables from the .env file
 const {
-    SQS_OUTBOUND_QUEUE_URL,
+    SQS_INBOUND_QUEUE_URL,
+    SQS_OUTBOUND_QUEUE_URL
     } = process.env;
 
 const workerPath = path.resolve(__dirname, 'worker.js');
