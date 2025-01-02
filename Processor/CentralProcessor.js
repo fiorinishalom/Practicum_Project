@@ -1,31 +1,9 @@
 const SQSClient = require("../Components/SQSClient");
 const dbConnection = require("../Components/DB_Conn");
-const {logMessage} = require("../Components/DB_Conn");
+const {logMessage, verifySender} = require("../Components/DB_Conn");
 require("dotenv").config({path: "../Secrets/secrets.env"});
 
 const {SQS_INBOUND_QUEUE_URL, SQS_OUTBOUND_QUEUE_URL} = process.env;
-
-const verifySender = async (sender) => {
-    const query = `
-        SELECT PSA, UserID, Username
-        FROM Accounts
-                 JOIN AdminCredentials
-                      ON Accounts.UserID = AdminCredentials.AdminID
-        WHERE PSA = ? AND Role = "Admin";
-    `;
-    console.log("About to check DB for PSA");
-
-    try {
-        const result = await dbConnection.execute(query, [sender]);
-        console.log("Rows retrieved from database:", result);
-
-        // Return the first matching row if it exists, otherwise return null
-        return result[0];
-    } catch (error) {
-        console.error("Error verifying sender:", error.message);
-        throw error;
-    }
-};
 
 
 // Function to query PSAs and platforms for Aside members
@@ -110,9 +88,12 @@ const processMessage = async () => {
         } else if (userCommand.includes("#stop")) {
             await removeRegUser(sender, asideIdInt);
         } else {
+            console.log("verifying Sender")
             const senderInfo = await verifySender(sender);
             if (senderInfo != null) {
                 const {UserID, Username} = senderInfo;
+                console.log('just got' + UserID + ' and ' + Username)
+                console.log('about to log the message');
                 await logMessage(asideIdInt, UserID, Username);
 
                 const psaData = await getPSAsAndPlatformsOfAsideMembers(asideIdInt);
