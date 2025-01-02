@@ -2,6 +2,5 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/Components/DB_Conn.js" dialect="GenericSQL" />
-    <file url="file://$PROJECT_DIR$/Secrets/SystemProcessor.js" dialect="GenericSQL" />
   </component>
 </project>
