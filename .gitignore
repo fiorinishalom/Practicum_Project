@@ -141,3 +141,4 @@ Secrets/secrets.env
 Secrets/
 Components/server.key
 Components/server.crt
+Components/SlackTimeStamp.json
