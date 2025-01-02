@@ -112,4 +112,5 @@ async function checkEmails() {
 }
 
 // Call the checkEmails function directly
-checkEmails();
+// Start the process and re-query every 2 seconds
+setInterval(checkEmails, 2000);
