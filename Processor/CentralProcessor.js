@@ -11,16 +11,16 @@ const verifySender = async (sender) => {
         FROM Accounts
                  JOIN AdminCredentials
                       ON Accounts.UserID = AdminCredentials.AdminID
-        WHERE PSA = ?;
+        WHERE PSA = ? AND Role = "Admin";
     `;
     console.log("About to check DB for PSA");
 
     try {
-        const [rows] = await dbConnection.execute(query, [sender]);
-        console.log("Rows retrieved from database:", rows);
+        const result = await dbConnection.execute(query, [sender]);
+        console.log("Rows retrieved from database:", result);
 
         // Return the first matching row if it exists, otherwise return null
-        return rows.length > 0 ? rows[0] : null;
+        return result[0];
     } catch (error) {
         console.error("Error verifying sender:", error.message);
         throw error;
@@ -97,6 +97,9 @@ const processMessage = async () => {
         const {sender, body: messageBody, subject: asideInfo} = parsedBody;
         const asideIdInt = parseInt(asideInfo, 10);
 
+
+
+
         console.log(`Received Sender: ${sender}, AsideID: ${asideIdInt}, Message: ${messageBody}`);
 
         const userCommand = messageBody.toLowerCase();
@@ -122,12 +125,16 @@ const processMessage = async () => {
                         MSG: messageBody
                     };
                     await SQSClient.sendMessage(SQS_OUTBOUND_QUEUE_URL, outJsonBlob);
+
                 }
             } else console.log("Unauthorized Sender");
+            await SQSClient.deleteMessage(SQS_INBOUND_QUEUE_URL, ReceiptHandle);
+            console.log("Processed and deleted the message from SQS.");
+
+
         }
 
-        await SQSClient.deleteMessage(SQS_INBOUND_QUEUE_URL, ReceiptHandle);
-        console.log("Processed and deleted the message from SQS.");
+
     } catch (error) {
         console.error(`Error processing message: ${error.message}`);
     }
