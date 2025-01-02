@@ -1,44 +1,64 @@
-const fs = require('fs');
-require('dotenv').config();
-const { WebClient } = require('@slack/web-api');
-const AWS = require('aws-sdk');
-const https = require('https');
-const uriredirect = 'https://localhost:3000/oauth2callback';
+const dotenv = require('dotenv');
 
-// Load SSL certificates
-const privateKey = process.env.SSL_PRIVATE_KEY;
-const certificate = fs.readFileSync('path/to/server.cert', 'utf8');
-const credentials = { key: privateKey, cert: certificate };
+// Load environment variables from both .env files
+dotenv.config({ path: '../Secrets/SlackSecrets.env' });
+dotenv.config({ path: '../Secrets/secrets.env' });
+
+const { WebClient } = require('@slack/web-api');
+const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
 
 // Initialize Slack client
-const slackClient = new WebClient(process.env.SLACK_TOKEN);
+const slackClient = new WebClient(process.env.BOT_USER_OAUTH);
 
 // Initialize AWS SQS client
-const sqs = new AWS.SQS({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.AWS_REGION
+const sqs = new SQSClient({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    }
 });
 
-const channelId = process.env.SLACK_CHANNEL_ID;
+const channelId = process.env.INBOUND_SLACK_CHANNEL_ID;
 const queueUrl = process.env.SQS_INBOUND_QUEUE_URL;
+let lastTimestamp = 0; // Initialize with 0 or load from persistent storage
 
 async function readSlackMessages() {
     try {
-        const result = await slackClient.conversations.history({ channel: channelId });
+        let result;
+        try {
+            result = await slackClient.conversations.history({
+                channel: channelId,
+                oldest: lastTimestamp
+            });
+            console.log('Fetched messages from Slack:', result);
+        } catch (slackError) {
+            console.error('Error fetching messages from Slack:', slackError.message);
+            return;
+        }
+
         const messages = result.messages;
 
         for (const message of messages) {
-            const params = {
-                MessageBody: JSON.stringify(message),
-                QueueUrl: queueUrl
-            };
+            try {
+                const params = {
+                    MessageBody: JSON.stringify(message),
+                    QueueUrl: queueUrl
+                };
 
-            await sqs.sendMessage(params).promise();
-            console.log(`Message sent to SQS: ${message.text}`);
+                const command = new SendMessageCommand(params);
+                await sqs.send(command);
+                console.log(`Message sent to SQS: ${message.text}`);
+            } catch (sqsError) {
+                console.error('Error sending message to SQS:', sqsError.message);
+            }
+        }
+
+        if (messages.length > 0) {
+            lastTimestamp = messages[0].ts; // Update the last timestamp
         }
     } catch (error) {
-        console.error('Error reading Slack messages or sending to SQS:', error.message);
+        console.error('General Error:', error.message);
     }
 }
 
