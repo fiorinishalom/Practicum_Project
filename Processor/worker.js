@@ -42,7 +42,7 @@ const processQueue = async () => {
                         const { UserID, Username } = senderInfo;
                         console.log(`Just got UserID: ${UserID} and Username: ${Username}`);
                         console.log("About to log the message");
-                        await logMessage(asideIdInt, UserID, Username);
+                        await logMessage(asideIdInt, UserID, messageBody);
 
                         const psaData = await getPSAsAndPlatformsOfAsideMembers(asideIdInt);
                         console.log(`Retrieved PSA data for Aside ${asideIdInt}:`, psaData);
