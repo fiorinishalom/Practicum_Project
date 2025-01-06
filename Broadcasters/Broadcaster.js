@@ -53,10 +53,4 @@ const broadCastMessage = async () => {
     }
 };
 
-(async () => {
-    try {
-        await broadCastMessage();
-    } catch (error) {
-        console.error("Unhandled error in broadcasting message:", error.message);
-    }
-})();
+module.exports = {broadCastMessage}
