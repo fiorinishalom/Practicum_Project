@@ -23,6 +23,13 @@ const broadCastMessage = async () => {
                     const parsedBody = JSON.parse(Body);
                     const { Platform: platform, PSA, MSG: messageBody } = parsedBody;
 
+                    // Delete the message from the SQS after processing
+                    await SQSClient.deleteMessage(SQS_OUTBOUND_QUEUE_URL, ReceiptHandle);
+                    console.log("Processed and deleted the message from SQS.");
+
+                    // notify parent thread that Q is not empty
+                    parentPort.postMessage('not-empty');
+
                     if (!platform || !PSA || !messageBody) {
                         console.error("Invalid message format:", parsedBody);
                         continue; // Skip further processing for this message
@@ -41,9 +48,7 @@ const broadCastMessage = async () => {
 
                     await sender.sendMessage(jsonBlob); // Send the message using the platform-specific sender
 
-                    // Delete the message from the SQS after processing
-                    await SQSClient.deleteMessage(SQS_OUTBOUND_QUEUE_URL, ReceiptHandle);
-                    console.log("Processed and deleted the message from SQS.");
+
                 } catch (processingError) {
                     console.error(`Error processing message: ${processingError.message}`);
                 }
