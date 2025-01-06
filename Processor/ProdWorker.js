@@ -1,7 +1,13 @@
-const { parentPort } = require('worker_threads');
+const path = require('path');
+
+const {parentPort} = require('worker_threads');
 const SQSClient = require("../Components/SQSClient");
 const dbConnection = require("../Components/DB_Conn");
-const { verifySender, logMessage } = require("../Components/DB_Conn");
+const {verifySender, logMessage} = require("../Components/DB_Conn");
+
+// Resolve the absolute path to the secrets.env file
+const Secrets_path = path.resolve(__dirname, '../Secrets/secrets.env');
+require('dotenv').config({path: Secrets_path});
 
 const {
     SQS_INBOUND_QUEUE_URL,
@@ -19,11 +25,18 @@ const processQueue = async () => {
 
             // Process the first message
             const message = messages[0];
-            const { Body, ReceiptHandle } = message;
+            const {Body, ReceiptHandle} = message;
+
+            // After processing, delete the message from the queue
+            await SQSClient.deleteMessage(SQS_INBOUND_QUEUE_URL, ReceiptHandle);
+            console.log("Processed and deleted the message from SQS.");
+
+            // Notify the main thread that the queue was not empty
+            parentPort.postMessage('not-empty');
 
             try {
                 const parsedBody = JSON.parse(Body);
-                const { sender, body: messageBody, subject: asideInfo } = parsedBody;
+                const {sender, body: messageBody, subject: asideInfo} = parsedBody;
                 const asideIdInt = parseInt(asideInfo, 10);
 
                 console.log(`Processing Sender: ${sender}, AsideID: ${asideIdInt}, Message: ${messageBody}`);
@@ -39,7 +52,7 @@ const processQueue = async () => {
                     console.log("Verifying Sender");
                     const senderInfo = await verifySender(sender);
                     if (senderInfo != null) {
-                        const { UserID, Username } = senderInfo;
+                        const {UserID, Username} = senderInfo;
                         console.log(`Just got UserID: ${UserID} and Username: ${Username}`);
                         console.log("About to log the message");
                         await logMessage(asideIdInt, UserID, messageBody);
@@ -47,7 +60,7 @@ const processQueue = async () => {
                         const psaData = await getPSAsAndPlatformsOfAsideMembers(asideIdInt);
                         console.log(`Retrieved PSA data for Aside ${asideIdInt}:`, psaData);
 
-                        for (const { PSA, platform } of psaData) {
+                        for (const {PSA, platform} of psaData) {
                             const outJsonBlob = {
                                 Platform: platform,
                                 PSA,
@@ -59,13 +72,6 @@ const processQueue = async () => {
                         console.log("Unauthorized Sender");
                     }
                 }
-                // After processing, delete the message from the queue
-                await SQSClient.deleteMessage(SQS_INBOUND_QUEUE_URL, ReceiptHandle);
-                console.log("Processed and deleted the message from SQS.");
-
-                // Notify the main thread that the queue is still not empty
-                parentPort.postMessage('not-empty');
-
             } catch (error) {
                 console.error(`Error processing message: ${error.message}`);
             }
@@ -97,8 +103,8 @@ const getPSAsAndPlatformsOfAsideMembers = async (asideId) => {
     const query = `
         SELECT Accounts.PSA, Accounts.Platform
         FROM Accounts
-        JOIN UserAside ON Accounts.UserID = UserAside.UserID
-        JOIN Aside ON UserAside.AsideId = Aside.AsideId
+                 JOIN UserAside ON Accounts.UserID = UserAside.UserID
+                 JOIN Aside ON UserAside.AsideId = Aside.AsideId
         WHERE Aside.AsideId = ?;
     `;
     console.log("About to check DB for Aside ID:", asideId);
@@ -106,7 +112,7 @@ const getPSAsAndPlatformsOfAsideMembers = async (asideId) => {
     const rows = await dbConnection.execute(query, [asideId]);
     console.log("Rows retrieved from database:", rows);
 
-    return Array.isArray(rows) ? rows.map(row => ({ PSA: row.PSA, platform: row.Platform })) : [];
+    return Array.isArray(rows) ? rows.map(row => ({PSA: row.PSA, platform: row.Platform})) : [];
 };
 
 // Function to add a user to an aside

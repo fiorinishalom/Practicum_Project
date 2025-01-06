@@ -93,6 +93,7 @@ const verifySender = async (senderPSA) => {
 
     console.log("About to check DB for PSA");
     try {
+        // TODO pool.execute works for shalom but not me
         const result = await pool.execute(query, [senderPSA]);
         console.log("Rows retrieved from database:", result);
         return result[0][0];
