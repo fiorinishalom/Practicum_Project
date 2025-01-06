@@ -1,21 +1,20 @@
 const base64url = require('base64url');
 const path = require('path');
 const fs = require('fs');
-const { google } = require('googleapis');
-const { simpleParser } = require('mailparser');
-const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
-const { fromIni } = require('@aws-sdk/credential-provider-ini');
-const { fromEnv } = require('@aws-sdk/credential-provider-env');
+const {google} = require('googleapis');
+const {simpleParser} = require('mailparser');
+const {SQSClient, SendMessageCommand} = require('@aws-sdk/client-sqs');
+const {fromIni} = require('@aws-sdk/credential-provider-ini');
+const {fromEnv} = require('@aws-sdk/credential-provider-env');
 
 // Resolve the absolute path to the secrets.env file
 const Secrets_path = path.resolve(__dirname, '../Secrets/secrets.env');
-
 
 if (!fs.existsSync(Secrets_path)) {
     throw new Error(`Secrets file not found at path: ${Secrets_path}`);
 }
 
-require('dotenv').config({ path: Secrets_path });
+require('dotenv').config({path: Secrets_path});
 
 // Load environment variables from the .env file
 const {
@@ -35,7 +34,7 @@ const REDIRECT_URI = 'http://localhost:3000/oauth2callback';
 
 // Configure OAuth2 client
 const oauth2Client = new google.auth.OAuth2(OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, REDIRECT_URI);
-oauth2Client.setCredentials({ refresh_token: OAUTH_REFRESH_TOKEN });
+oauth2Client.setCredentials({refresh_token: OAUTH_REFRESH_TOKEN});
 
 // Create an SQS client with environment credentials
 const sqsClient = new SQSClient({
@@ -79,10 +78,10 @@ async function processEmail(email) {
 }
 
 async function checkEmails() {
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+    const gmail = google.gmail({version: 'v1', auth: oauth2Client});
 
     try {
-        const res = await gmail.users.messages.list({ userId: 'me', q: 'is:unread' });
+        const res = await gmail.users.messages.list({userId: 'me', q: 'is:unread'});
         const messages = res.data.messages || [];
 
         if (messages.length === 0) {
@@ -91,7 +90,7 @@ async function checkEmails() {
         }
 
         for (const message of messages) {
-            const msg = await gmail.users.messages.get({ userId: 'me', id: message.id, format: 'raw' });
+            const msg = await gmail.users.messages.get({userId: 'me', id: message.id, format: 'raw'});
             const email = msg.data.raw;
             if (email) {
                 await processEmail(email);
@@ -103,7 +102,7 @@ async function checkEmails() {
             await gmail.users.messages.modify({
                 userId: 'me',
                 id: message.id,
-                resource: { removeLabelIds: ['UNREAD'] }
+                resource: {removeLabelIds: ['UNREAD']}
             });
         }
     } catch (error) {

@@ -18,17 +18,17 @@ const broadCastMessage = async () => {
                 const message = messages[0];
                 const { Body, ReceiptHandle } = message;
 
+                // Delete the message from the SQS after processing
+                await SQSClient.deleteMessage(SQS_OUTBOUND_QUEUE_URL, ReceiptHandle);
+                console.log("Processed and deleted the message from SQS.");
+
+                // notify parent thread that Q is not empty
+                parentPort.postMessage('not-empty');
+
                 try {
                     // Parse the message body
                     const parsedBody = JSON.parse(Body);
                     const { Platform: platform, PSA, MSG: messageBody } = parsedBody;
-
-                    // Delete the message from the SQS after processing
-                    await SQSClient.deleteMessage(SQS_OUTBOUND_QUEUE_URL, ReceiptHandle);
-                    console.log("Processed and deleted the message from SQS.");
-
-                    // notify parent thread that Q is not empty
-                    parentPort.postMessage('not-empty');
 
                     if (!platform || !PSA || !messageBody) {
                         console.error("Invalid message format:", parsedBody);

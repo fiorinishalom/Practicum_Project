@@ -1,8 +1,8 @@
 // emailService.js
 const nodemailer = require('nodemailer');
-require('dotenv').config({ path: '../Components/secrets.env' });
+require('dotenv').config({path: '../Components/secrets.env'});
 
-const { EMAIL_USER, EMAIL_PASSWORD } = process.env;
+const {EMAIL_USER, EMAIL_PASSWORD} = process.env;
 
 // Create a transporter object
 const transporter = nodemailer.createTransport({
@@ -30,4 +30,4 @@ const sendEmail = async (to, subject, text) => {
     }
 };
 
-module.exports = { sendEmail };
+module.exports = {sendEmail};

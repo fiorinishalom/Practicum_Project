@@ -1,11 +1,11 @@
-const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
-const { fromEnv } = require('@aws-sdk/credential-provider-env');
+const {SQSClient, SendMessageCommand} = require('@aws-sdk/client-sqs');
+const {fromEnv} = require('@aws-sdk/credential-provider-env');
 const path = require('path');
 const dotenv = require('dotenv');
 
 // Load environment variables from the .env file
 const Secrets_path = path.resolve(__dirname, '../Secrets/secrets.env');
-dotenv.config({ path: Secrets_path });
+dotenv.config({path: Secrets_path});
 
 // Configure AWS SDK
 const client = new SQSClient({
@@ -24,4 +24,4 @@ async function sendMessage(queueUrl, messageBody) {
     return client.send(command);
 }
 
-module.exports = { sendMessage };
+module.exports = {sendMessage};
