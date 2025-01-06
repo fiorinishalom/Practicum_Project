@@ -29,7 +29,7 @@ const broadCastMessage = async () => {
                     // Parse the message body
                     const parsedBody = JSON.parse(Body);
                     const { Platform: platform, PSA, MSG: messageBody } = parsedBody;
-
+                    
                     if (!platform || !PSA || !messageBody) {
                         console.error("Invalid message format:", parsedBody);
                         continue; // Skip further processing for this message
