@@ -1,5 +1,5 @@
 const mysql = require('mysql2/promise');
-require("dotenv").config({ path: "../Secrets/secrets.env" });
+require("dotenv").config({path: "../Secrets/secrets.env"});
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
@@ -47,7 +47,7 @@ const executeAddUser = async (platform, psa, asideId) => {
         `;
         await pool.execute(insertUserAsideQuery, [userId, asideId]);
 
-        return { userId }; // Optionally return the user ID
+        return {userId}; // Optionally return the user ID
     } catch (error) {
         console.error("Error adding user:", error.message);
         throw error; // Propagate error to the caller
@@ -57,7 +57,8 @@ const executeAddUser = async (platform, psa, asideId) => {
 
 const executeRemoveUser = async (psa, asideId) => {
     const removeUser = `
-        DELETE ua, a
+        DELETE
+        ua, a
         FROM UserAside ua
         JOIN Accounts a ON ua.UserID = a.UserID
         WHERE a.PSA = ? AND ua.AsideID = ? AND a.ROLE != 'Admin';
@@ -76,8 +77,8 @@ const executeRemoveUser = async (psa, asideId) => {
 
 const logMessage = async (asideID, UserID, msg) => {
     const addMessage = `
-    INSERT INTO MessageLog(AsideID, UserID, Content) 
-    VALUES (?, ?, ?);
+        INSERT INTO MessageLog(AsideID, UserID, Content)
+        VALUES (?, ?, ?);
     `
     await pool.execute(addMessage, [asideID, UserID, msg]);
 };
@@ -85,10 +86,10 @@ const verifySender = async (senderPSA) => {
     const query = `
         SELECT PSA, UserID, Username
         FROM Accounts
-        JOIN AdminCredentials
-        ON Accounts.UserID = AdminCredentials.AdminID
-        WHERE PSA = ? AND Role = "Admin"
-            LIMIT 1;
+                 JOIN AdminCredentials
+                      ON Accounts.UserID = AdminCredentials.AdminID
+        WHERE PSA = ?
+          AND Role = "Admin" LIMIT 1;
     `;
 
     console.log("About to check DB for PSA");
@@ -102,6 +103,4 @@ const verifySender = async (senderPSA) => {
     }
 };
 
-
-
-module.exports = { execute, executeAddUser, executeRemoveUser, logMessage, verifySender};
+module.exports = {execute, executeAddUser, executeRemoveUser, logMessage, verifySender};

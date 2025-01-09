@@ -4,12 +4,15 @@ const path = require('path');
 const {WebClient} = require('@slack/web-api');
 const {SQSClient, SendMessageCommand} = require('@aws-sdk/client-sqs');
 
-// Load environment variables from both .env files
-dotenv.config({path: '../Secrets/SlackSecrets.env'});
-dotenv.config({path: '../Secrets/secrets.env'});
+// Define the base directory for the script (can be adjusted to fit your folder structure)
+const baseDir = __dirname;
 
-// Path to the timestamp file
-const timestampFilePath = path.join(__dirname, '../Components/SlackTimeStamp.json');
+// Load environment variables from both .env files with absolute paths
+dotenv.config({ path: path.resolve(baseDir, '../Secrets/SlackSecrets.env') });
+dotenv.config({ path: path.resolve(baseDir, '../Secrets/secrets.env') });
+
+// Path to the timestamp file with an absolute path
+const timestampFilePath = path.resolve(baseDir, '../Components/SlackTimeStamp.json');
 
 // Initialize Slack client
 const slackClient = new WebClient(process.env.BOT_USER_OAUTH);
@@ -101,4 +104,6 @@ const readSlackMessages = async () => {
 };
 
 // Start the process and re-query every 2 seconds
-setInterval(readSlackMessages, 2000);
+function begin(){setInterval(readSlackMessages, 2000);}
+
+module.exports = {begin};

@@ -2,8 +2,8 @@ const path = require('path');
 
 const {parentPort} = require('worker_threads');
 const SQSClient = require("../Components/SQSClient");
-const dbConnection = require("../Components/DB_Conn");
-const {verifySender, logMessage} = require("../Components/DB_Conn");
+const dbConnection = require("../Database/DB_Query");
+const {verifySender, logMessage} = require("../Database/DB_Query");
 
 // Resolve the absolute path to the secrets.env file
 const Secrets_path = path.resolve(__dirname, '../Secrets/secrets.env');

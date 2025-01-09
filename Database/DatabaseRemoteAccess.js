@@ -1,5 +1,10 @@
 // Import the necessary modules from AWS SDK
-const { RDSClient, DescribeDBInstancesCommand, StopDBInstanceCommand, RebootDBInstanceCommand} = require("@aws-sdk/client-rds");
+const {
+    RDSClient,
+    DescribeDBInstancesCommand,
+    StopDBInstanceCommand,
+    RebootDBInstanceCommand, StartDBInstanceCommand
+} = require("@aws-sdk/client-rds");
 
 const dotenv = require('dotenv');
 
@@ -58,22 +63,36 @@ async function stopRDSInstance(dbInstanceIdentifier) {
 
 async function restartRDSInstance(dbInstanceIdentifier) {
     try {
-        // Create the RebootDBInstanceCommand with the provided DB instance identifier
-        const rebootCommand = new RebootDBInstanceCommand({
+        // First, check the current status of the DB instance
+        const describeCommand = new DescribeDBInstancesCommand({
             DBInstanceIdentifier: dbInstanceIdentifier,
         });
 
-        // Send the command to AWS RDS to reboot the instance
-        const rebootData = await rdsClient.send(rebootCommand);
+        const describeData = await rdsClient.send(describeCommand);
+        const dbInstanceStatus = describeData.DBInstances[0].DBInstanceStatus;
 
-        console.log(`The RDS instance ${dbInstanceIdentifier} is now restarting. Status: ${rebootData.DBInstance.DBInstanceStatus}`);
+        console.log(`Current DB instance status: ${dbInstanceStatus}`);
+
+        // If the instance is stopped, start it
+        if (dbInstanceStatus === 'stopped') {
+            console.log("The RDS instance is stopped. Starting the instance...");
+
+            // Start the DB instance
+            const startCommand = new StartDBInstanceCommand({
+                DBInstanceIdentifier: dbInstanceIdentifier,
+            });
+
+            const startData = await rdsClient.send(startCommand);
+            console.log(`The RDS instance ${dbInstanceIdentifier} is now starting. Status: ${startData.DBInstance.DBInstanceStatus}`);
+        } else {
+            // If the instance is not stopped, reboot it
+            console.log("The RDS instance is already running.");
+        }
     } catch (error) {
-        console.error(`Error restarting the RDS instance ${dbInstanceIdentifier}:`, error);
+        console.error(`Error restarting or starting the RDS instance ${dbInstanceIdentifier}:`, error);
     }
 }
 
 
-
 // Call the function with the RDS instance identifier
-// Replace with your DB instance ID
-stopRDSInstance(DB_NAME);
+module.exports = {restartRDSInstance};
