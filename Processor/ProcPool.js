@@ -10,7 +10,7 @@ require('dotenv').config({path: Secrets_path});
 // Now you can access the SQS_INBOUND_QUEUE_URL and other environment variables
 const {SQS_INBOUND_QUEUE_URL} = process.env;
 
-const workerPath = path.resolve(__dirname, 'ProdWorker.js');
+const workerPath = path.resolve(__dirname, 'ProcWorker.js');
 const maxThreads = 10;
 let activeThreads = 0;
 
