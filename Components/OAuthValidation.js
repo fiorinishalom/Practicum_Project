@@ -1,10 +1,10 @@
-const { google } = require('googleapis');
+const {google} = require('googleapis');
 const readline = require('readline');
 const fs = require('fs');
 const path = require('path');
 const Secrets_path = path.resolve(__dirname, '../Secrets/secrets.env');
 
-require('dotenv').config({ path: Secrets_path });
+require('dotenv').config({path: Secrets_path});
 
 const CLIENT_ID = process.env.OAUTH_CLIENT_ID;
 const CLIENT_SECRET = process.env.OAUTH_CLIENT_SECRET;

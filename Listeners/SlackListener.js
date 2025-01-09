@@ -54,8 +54,8 @@ const processMessage = async (message) => {
         const body = match[2].trim();
         const jsonBlob = {
             sender: message.user,
-            AsideID: AsideID,
             body: body,
+            subject: AsideID
         };
 
         const params = {

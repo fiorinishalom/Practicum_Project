@@ -1,9 +1,8 @@
-
 const SQSClient = require("../Components/SQSClient");
 const getMessageSender = require("./getMessageSender");
-require("dotenv").config({ path: "../Secrets/secrets.env" });
+require("dotenv").config({path: "../Secrets/secrets.env"});
 
-const { SQS_OUTBOUND_QUEUE_URL } = process.env;
+const {SQS_OUTBOUND_QUEUE_URL} = process.env;
 
 const broadCastMessage = async () => {
     console.log("Checking for messages in the outbound queue...");
@@ -18,12 +17,12 @@ const broadCastMessage = async () => {
         }
 
         const message = messages[0];
-        const { Body, ReceiptHandle } = message;
+        const {Body, ReceiptHandle} = message;
 
         try {
             // Parse the message body
             const parsedBody = JSON.parse(Body);
-            const { Platform: platform, PSA, MSG: messageBody } = parsedBody;
+            const {Platform: platform, PSA, MSG: messageBody} = parsedBody;
 
             if (!platform || !PSA || !messageBody) {
                 console.error("Invalid message format:", parsedBody);
@@ -37,7 +36,7 @@ const broadCastMessage = async () => {
                 console.error(`No sender found for platform: ${platform}`);
             }
 
-            const jsonBlob = { PSA, MSG: messageBody };
+            const jsonBlob = {PSA, MSG: messageBody};
             console.log(`Sending message to PSA ${PSA} on platform ${platform}`);
 
             await sender.sendMessage(jsonBlob); // Send the message using the platform-specific sender
@@ -53,10 +52,4 @@ const broadCastMessage = async () => {
     }
 };
 
-(async () => {
-    try {
-        await broadCastMessage();
-    } catch (error) {
-        console.error("Unhandled error in broadcasting message:", error.message);
-    }
-})();
+module.exports = {broadCastMessage}

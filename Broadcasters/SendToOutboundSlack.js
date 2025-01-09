@@ -1,8 +1,8 @@
-const { WebClient } = require('@slack/web-api');
+const {WebClient} = require('@slack/web-api');
 const dotenv = require('dotenv');
 
 // Load environment variables from .env file
-dotenv.config({ path: '../Secrets/SlackSecrets.env' }); // Update the path to your .env file
+dotenv.config({path: '../Secrets/SlackSecrets.env'}); // Update the path to your .env file
 
 // Your Bot Token
 const token = process.env.BOT_USER_OAUTH;

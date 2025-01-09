@@ -1,8 +1,8 @@
-const { SQSClient, ReceiveMessageCommand, DeleteMessageCommand, SendMessageCommand } = require("@aws-sdk/client-sqs");
+const {SQSClient, ReceiveMessageCommand, DeleteMessageCommand, SendMessageCommand} = require("@aws-sdk/client-sqs");
 
 class SQSClientWrapper {
     // Static instance of the SQS client with a hardcoded region
-    static client = new SQSClient({ region: "us-east-1" });
+    static client = new SQSClient({region: "us-east-1"});
 
     // Static method to receive messages from the SQS queue
     static async receiveMessages(queueUrl, maxNumberOfMessages = 1, waitTimeSeconds = 10) {

@@ -1,2 +1,2 @@
 const email_port = 3001;
-module.exports = { email_port };
+module.exports = {email_port};
