@@ -2,6 +2,7 @@ const emailListener = require('./Listeners/EmailListener.js');
 const slackListener = require('./Listeners/SlackListener.js');
 const databaseRemoteAccess = require('./Database/DatabaseRemoteAccess.js');
 const processorPool = require('./Processor/ProcPool.js');
+const broadPool = require ('./Broadcasters/BroadPool.js');
 
 databaseRemoteAccess.restartRDSInstance();
 
@@ -13,3 +14,5 @@ slackListener.begin();  // This will run the 'begin' method defined in SlackList
 
 //start processor and broadcasters
 processorPool.begin();  // This will run the 'begin' method defined in ProcPool.js
+
+broadPool.begin();  // This will run the 'begin' method defined in BroadPool.js

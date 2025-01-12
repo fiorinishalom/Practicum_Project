@@ -52,7 +52,7 @@ const createWorker = () => {
 const checkQueueAndManageWorkers = async () => {
     setInterval(async () => {
         if (activeThreads === 0) {
-            console.log("No active workers. Checking the queue...");
+            console.log("No active proc workers. Checking the queue...");
             const messages = await SQSClient.receiveMessages(SQS_INBOUND_QUEUE_URL, 1, 10);
 
             if (messages.length > 0) {

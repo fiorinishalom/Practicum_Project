@@ -52,7 +52,7 @@ const createWorker = () => {
 const checkQueueAndManageWorkers = async () => {
     setInterval(async () => {
         if (activeThreads === 0) {
-            console.log("No active workers. Checking the queue...");
+            console.log("No active broad workers. Checking the queue...");
             const messages = await SQSClient.receiveMessages(SQS_OUTBOUND_QUEUE_URL, 1, 10);
 
             if (messages.length > 0) {
@@ -65,4 +65,8 @@ const checkQueueAndManageWorkers = async () => {
     }, 2000);
 };
 
-checkQueueAndManageWorkers();
+function begin () {
+    checkQueueAndManageWorkers();
+}
+
+module.exports = {begin};
