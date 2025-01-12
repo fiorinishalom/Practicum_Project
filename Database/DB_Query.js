@@ -1,5 +1,5 @@
 require("dotenv").config({path: "../Secrets/secrets.env"});
-const connectionPath = require ('DBConnection.js');
+const connectionPath = require ('./DBConnection');
 const pool = connectionPath.getConnection();
 
 const execute = async (query, params) => {

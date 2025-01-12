@@ -52,14 +52,14 @@ const createWorker = () => {
 const checkQueueAndManageWorkers = async () => {
     setInterval(async () => {
         if (activeThreads === 0) {
-            console.log("No active proc workers. Checking the queue...");
+            console.log("No active proc workers. Checking the inbound queue...");
             const messages = await SQSClient.receiveMessages(SQS_INBOUND_QUEUE_URL, 1, 10);
 
             if (messages.length > 0) {
-                console.log("Messages found in the queue. Dispatching a worker...");
+                console.log("Messages found in the inbound queue. Dispatching a proc worker...");
                 createWorker();
             } else {
-                console.log("Queue is empty. Waiting for new messages...");
+                console.log("Inbound Queue is empty. Waiting for new messages...");
             }
         }
     }, 2000);
