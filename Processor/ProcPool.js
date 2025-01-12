@@ -65,4 +65,7 @@ const checkQueueAndManageWorkers = async () => {
     }, 2000);
 };
 
-checkQueueAndManageWorkers();
+function begin() {
+    checkQueueAndManageWorkers();
+}
+module.exports = {begin};

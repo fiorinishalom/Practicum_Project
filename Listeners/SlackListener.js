@@ -8,8 +8,8 @@ const {SQSClient, SendMessageCommand} = require('@aws-sdk/client-sqs');
 const baseDir = __dirname;
 
 // Load environment variables from both .env files with absolute paths
-dotenv.config({ path: path.resolve(baseDir, '../Secrets/SlackSecrets.env') });
-dotenv.config({ path: path.resolve(baseDir, '../Secrets/secrets.env') });
+dotenv.config({path: path.resolve(baseDir, '../Secrets/SlackSecrets.env')});
+dotenv.config({path: path.resolve(baseDir, '../Secrets/secrets.env')});
 
 // Path to the timestamp file with an absolute path
 const timestampFilePath = path.resolve(baseDir, '../Components/SlackTimeStamp.json');
@@ -104,6 +104,8 @@ const readSlackMessages = async () => {
 };
 
 // Start the process and re-query every 2 seconds
-function begin(){setInterval(readSlackMessages, 2000);}
+function begin() {
+    setInterval(readSlackMessages, 2000);
+}
 
 module.exports = {begin};

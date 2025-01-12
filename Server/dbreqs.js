@@ -1,5 +1,5 @@
 const mysql = require("mysql2/promise");
-require("dotenv").config({ path: '../Secrets/secrets.env' });
+require("dotenv").config({path: '../Secrets/secrets.env'});
 
 // Create a pool for better connection management
 
@@ -26,8 +26,8 @@ const getAllAsidesOfUser = async (userId) => {
     const query = `
         SELECT Aside.AsideID, Aside.asideName
         FROM Aside
-        JOIN UserAside ON Aside.AsideID = UserAside.AsideID
-        JOIN Accounts ON UserAside.userID = Accounts.userID
+                 JOIN UserAside ON Aside.AsideID = UserAside.AsideID
+                 JOIN Accounts ON UserAside.userID = Accounts.userID
         WHERE Accounts.userId = ?;
     `;
     return queryDatabase(query, [userId]);
@@ -46,8 +46,8 @@ const checkLogin = async (username, password) => {
     const query = `
         SELECT *
         FROM AdminCredentials
-        WHERE Username = ? AND Password = ?
-            LIMIT 1;
+        WHERE Username = ?
+          AND Password = ? LIMIT 1;
 
 
     `;
@@ -56,12 +56,11 @@ const checkLogin = async (username, password) => {
 
 const insertMessage = async (userId, asideId, msg) => {
     const query = `
-    INSERT INTO MessageLog (UserID, AsideID, Content, Timestamp)
-    VALUES (?, ?, ?, NOW());
-`;
-    return queryDatabase(query, [userId,  asideId, msg]);
+        INSERT INTO MessageLog (UserID, AsideID, Content, Timestamp)
+        VALUES (?, ?, ?, NOW());
+    `;
+    return queryDatabase(query, [userId, asideId, msg]);
 };
 
 
-
-module.exports = { getAllAsidesOfUser, getMessagesByAsideName, checkLogin, insertMessage };
+module.exports = {getAllAsidesOfUser, getMessagesByAsideName, checkLogin, insertMessage};

@@ -1,8 +1,8 @@
-const { parentPort } = require('worker_threads');
+const {parentPort} = require('worker_threads');
 const SQSClient = require("../Components/SQSClient");
 const getMessageSender = require("./getMessageSender");
 
-const { SQS_OUTBOUND_QUEUE_URL } = process.env;
+const {SQS_OUTBOUND_QUEUE_URL} = process.env;
 
 const broadCastMessage = async () => {
     while (true) {
@@ -16,7 +16,7 @@ const broadCastMessage = async () => {
 
                 // Process the first message
                 const message = messages[0];
-                const { Body, ReceiptHandle } = message;
+                const {Body, ReceiptHandle} = message;
 
                 // Delete the message from the SQS after processing
                 await SQSClient.deleteMessage(SQS_OUTBOUND_QUEUE_URL, ReceiptHandle);
@@ -28,8 +28,8 @@ const broadCastMessage = async () => {
                 try {
                     // Parse the message body
                     const parsedBody = JSON.parse(Body);
-                    const { Platform: platform, PSA, MSG: messageBody } = parsedBody;
-                    
+                    const {Platform: platform, PSA, MSG: messageBody} = parsedBody;
+
                     if (!platform || !PSA || !messageBody) {
                         console.error("Invalid message format:", parsedBody);
                         continue; // Skip further processing for this message
@@ -43,7 +43,7 @@ const broadCastMessage = async () => {
                         continue; // Skip further processing for this message
                     }
 
-                    const jsonBlob = { PSA, MSG: messageBody };
+                    const jsonBlob = {PSA, MSG: messageBody};
                     console.log(`Sending message to PSA ${PSA} on platform ${platform}`);
 
                     await sender.sendMessage(jsonBlob); // Send the message using the platform-specific sender
