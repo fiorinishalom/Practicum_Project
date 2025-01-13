@@ -12,7 +12,7 @@
           <Password id="password" v-model="password" :feedback="false" placeholder="Enter your password" toggleMask />
         </div>
 
-        <Button label="Login" class="p-button-primary" @click="handleLogin" />
+        <Button label="Login" class="p-button-primary" @click="handleLogin"/>
       </div>
     </div>
   </div>

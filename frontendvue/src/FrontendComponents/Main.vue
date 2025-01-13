@@ -12,7 +12,7 @@
     </div>
     <div class="main-content">
       <div style="overflow-y: scroll; height:100%;">
-      <h3>Messages</h3>
+      <h3>{{ currentAside.meta ? currentAside.meta.asideName : 'Select a group chat' }}</h3>
       <!-- Show messages when a chat is selected -->
       <div v-if="currentAside.messages.length > 0">
         <div v-for="message in currentAside.messages" :key="message.id" class="message">
